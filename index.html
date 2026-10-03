@@ -76,10 +76,15 @@ function save(){
 const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function addSec(){const v=nt.value.trim();if(!v)return;S.unshift({id:Date.now(),title:v,heading:v,items:[],open:true,idx:0});nt.value="";save();render()}
 let view=null,hist=[];
-function openSec(i){hist.push(view);view=i;try{history.pushState({v:i},"")}catch(e){}render();scrollTo(0,0)}
-function back(){view=hist.length?hist.pop():null;render();scrollTo(0,0)}
-function home(){hist=[];view=null;render();scrollTo(0,0)}
+async function reloadData(){
+  if(!db)return;
+  try{const v=await new Promise(res=>{const q=db.transaction("kv").objectStore("kv").get("secs");q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)});if(Array.isArray(v))S=v}catch(e){}
+}
+async function openSec(i){const id=S[i]&&S[i].id;await reloadData();const j=S.findIndex(s=>s.id===id);if(j<0){return home()}hist.push(view);view=j;try{history.pushState({v:j},"")}catch(e){}render();scrollTo(0,0)}
+async function back(){await reloadData();view=hist.length?hist.pop():null;render();scrollTo(0,0)}
+async function home(){await reloadData();hist=[];view=null;render();scrollTo(0,0)}
 addEventListener("popstate",()=>{if(view!==null)back()});
+document.addEventListener("visibilitychange",async()=>{if(document.visibilityState=="visible"){await reloadData();render()}});
 function delSec(i){if(confirm("حذف هذا القسم؟")){S.splice(i,1);save();home()}}
 function setT(i,v){S[i].heading=v;S[i].title=v||S[i].title;save();ttl.textContent=S[i].title}
 function setX(i,j,v){S[i].items[j].text=v;save()}
@@ -106,14 +111,14 @@ function render(){
     list.innerHTML=`<div class="sec"><div class="body" style="display:block;padding-top:16px">
    <input class="big" value="${esc(s.heading)}" placeholder="العنوان الكبير" oninput="setT(${i},this.value)">
    ${n?`<div class="vw"><img src="${t.img}" onclick="zoom(${i},${k})" ontouchstart="ts(event)" ontouchend="te(event,${i})">
-     ${n>1?`<button class="nav r" onclick="go(${i},-1)">→</button><button class="nav l" onclick="go(${i},1)">←</button>`:""}
+     ${n>1?`<button class="nav r" onclick="go(${i},1)">→</button><button class="nav l" onclick="go(${i},-1)">←</button>`:""}
      <span class="cnt">${k+1} / ${n}</span></div>
    <textarea placeholder="اكتب ما تشاء هنا..." oninput="setX(${i},${k},this.value)">${esc(t.text)}</textarea>
    <div class="row"><span>
-     <button class="g" onclick="mv(${i},-1)" ${k==0?"disabled style='opacity:.4'":""}>→ تقديم</button>
-     <button class="g" onclick="mv(${i},1)" ${k==n-1?"disabled style='opacity:.4'":""}>تأخير ←</button></span>
+     <button class="g" onclick="mv(${i},-1)" ${k==0?"disabled style='opacity:.4'":""}>← تقديم</button>
+     <button class="g" onclick="mv(${i},1)" ${k==n-1?"disabled style='opacity:.4'":""}>تأخير →</button></span>
      <button class="d" onclick="delIt(${i},${k})">حذف الصورة</button></div>`:""}
-   <div class="row"><label class="btn g" style="position:relative;overflow:hidden">+ إضافة صور<input type="file" accept="image/*" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0" onchange="addImgs(${i},this)"></label><button class="d" onclick="delSec(${i})">حذف القسم</button></div>
+   <div class="row"><label class="btn g" style="position:relative;overflow:hidden">+ إضافة صور<input type="file" accept="image/*" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0" onchange="addImgs(${i},this)"></label></div>
   </div></div>`;
   }
 }
@@ -147,14 +152,22 @@ async function restore(inp){
   try{
     const d=JSON.parse(await f.text());
     if(!Array.isArray(d))throw 0;
-    const ids=new Set(S.map(s=>s.id));
-    d.forEach(s=>{if(!ids.has(s.id))S.push(s)});
-    save();render();alert("تمت الاستعادة");
+    if(confirm("موافق = استبدال كل بيانات هذا الجهاز بالنسخة (تظهر التعديلات كما هي في النسخة)\n\nإلغاء = دمج الأقسام الجديدة فقط دون المساس بالموجود")){
+      S=d;
+    }else{
+      const ids=new Set(S.map(s=>s.id));
+      d.forEach(s=>{if(!ids.has(s.id))S.push(s)});
+    }
+    view=null;hist=[];save();render();alert("تمت الاستعادة");
   }catch(e){alert("ملف غير صالح")}
   inp.value="";
 }
 load();
-if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+if("serviceWorker" in navigator){addEventListener("load",()=>{
+  let first=!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(first){first=false;return}location.reload()});
+  navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{});
+})}
 </script>
 </body>
 </html>
