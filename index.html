@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>أقسامي</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2f6f5e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="أقسامي">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f4ef;--card:#fff;--tx:#1d1d1b;--mut:#7a766d;--ac:#2f6f5e;--bd:#e3dfd5}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171716;--card:#232321;--tx:#f1efe9;--mut:#9a968c;--ac:#6fc3a9;--bd:#37352f}}
+:root[data-theme="dark"]{--bg:#171716;--card:#232321;--tx:#f1efe9;--mut:#9a968c;--ac:#6fc3a9;--bd:#37352f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;padding:16px;max-width:640px;margin-inline:auto}
+#top{display:flex;align-items:center;gap:8px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;padding:8px 0;margin-bottom:8px}
+#top h1{margin:0;font-size:22px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#top button{padding:8px 12px}
+.add{display:flex;gap:8px;margin-bottom:16px}
+input,textarea{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;width:100%}
+button,.btn{font:inherit;border:0;border-radius:12px;padding:10px 14px;background:var(--ac);color:#fff;cursor:pointer;display:inline-block}
+button.g,.btn.g{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+button.d{background:transparent;color:#c0392b;padding:8px}
+.sec{background:var(--card);border:1px solid var(--bd);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.hd{display:flex;align-items:center;justify-content:space-between;padding:16px;cursor:pointer;font-size:18px;font-weight:600}
+.hd span.ar{color:var(--mut);transition:transform .2s}
+.open .hd span.ar{transform:rotate(-90deg)}
+.body{display:none;padding:0 16px 16px}
+.open .body{display:block}
+.big{font-size:26px;font-weight:700;border:0;border-bottom:2px solid var(--ac);border-radius:0;background:transparent;padding:6px 0;margin-bottom:14px}
+.vw{position:relative;background:var(--bg);border-radius:12px;margin-bottom:8px;display:flex;justify-content:center}
+.vw img{max-width:100%;max-height:60vh;object-fit:contain;border-radius:12px;display:block}
+.nav{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;padding:0;font-size:20px;background:rgba(0,0,0,.55);color:#fff}
+.nav.r{right:6px}.nav.l{left:6px}
+.cnt{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;border-radius:10px;padding:2px 10px;font-size:13px}
+textarea{min-height:90px;resize:vertical}
+.row{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.empty{color:var(--mut);text-align:center;padding:30px 0}
+#zm{position:fixed;inset:0;background:#000;z-index:99;display:none;align-items:center;justify-content:center;touch-action:none;overflow:hidden}
+#zi{max-width:100%;max-height:100%;transform-origin:center;user-select:none;-webkit-user-drag:none}
+.zb{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;gap:8px;left:12px}
+.zb button{background:rgba(255,255,255,.2);width:44px;height:44px;padding:0;font-size:22px}
+</style>
+</head>
+<body>
+<div id="top"><button class="g" id="bk" onclick="back()" style="display:none">→ رجوع</button><button class="g" id="hm" onclick="home()" style="display:none">🏠</button><h1 id="ttl">أقسامي</h1></div>
+<div id="homebar"><div class="add"><input id="nt" placeholder="عنوان قسم جديد..."><button onclick="addSec()">إضافة</button></div>
+<div class="add" style="margin-top:-6px">
+  <button class="g" onclick="backup()">⬇ نسخة احتياطية</button>
+  <label class="btn g" style="position:relative;overflow:hidden">⬆ استعادة<input type="file" accept=".json,application/json" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0" onchange="restore(this)"></label>
+</div></div>
+<div id="list"></div>
+<div id="zm"><img id="zi"><div class="zb"><button onclick="zs(1.4)">+</button><button onclick="zs(1/1.4)">−</button><button onclick="zc()">✕</button></div></div>
+<script>
+let S=[],db=null;
+const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open("sections-app",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+async function load(){
+  let old=[];try{old=JSON.parse(localStorage.getItem("secs")||"[]")}catch(e){}
+  try{
+    db=await idb();
+    const v=await new Promise(res=>{const q=db.transaction("kv").objectStore("kv").get("secs");q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)});
+    S=(v&&v.length)?v:old;
+    if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+  }catch(e){S=old}
+  render();if(S.length)save();
+}
+function save(){
+  if(db){try{db.transaction("kv","readwrite").objectStore("kv").put(S,"secs");return}catch(e){}}
+  try{localStorage.setItem("secs",JSON.stringify(S))}catch(e){alert("المساحة ممتلئة، احذف بعض الصور")}
+}
+const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function addSec(){const v=nt.value.trim();if(!v)return;S.unshift({id:Date.now(),title:v,heading:v,items:[],open:true,idx:0});nt.value="";save();render()}
+let view=null,hist=[];
+function openSec(i){hist.push(view);view=i;try{history.pushState({v:i},"")}catch(e){}render();scrollTo(0,0)}
+function back(){view=hist.length?hist.pop():null;render();scrollTo(0,0)}
+function home(){hist=[];view=null;render();scrollTo(0,0)}
+addEventListener("popstate",()=>{if(view!==null)back()});
+function delSec(i){if(confirm("حذف هذا القسم؟")){S.splice(i,1);save();home()}}
+function setT(i,v){S[i].heading=v;S[i].title=v||S[i].title;save();ttl.textContent=S[i].title}
+function setX(i,j,v){S[i].items[j].text=v;save()}
+function cur(i){const s=S[i];return Math.max(0,Math.min(s.idx||0,s.items.length-1))}
+function delIt(i,j){if(!confirm("حذف هذه الصورة؟"))return;S[i].items.splice(j,1);S[i].idx=Math.max(0,j-1);save();render()}
+function go(i,d){const n=S[i].items.length;S[i].idx=(cur(i)+d+n)%n;render()}
+function mv(i,d){const k=cur(i),a=S[i].items,t=k+d;if(t<0||t>=a.length)return;[a[k],a[t]]=[a[t],a[k]];S[i].idx=t;save();render()}
+let sx=0;
+function ts(e){sx=e.changedTouches[0].clientX}
+function te(e,i){const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>60&&S[i].items.length>1)go(i,dx<0?1:-1)}
+async function addImgs(i,inp){const fs=[...inp.files];for(const f of fs){try{S[i].items.push({img:await shrink(f),text:""})}catch(e){}}S[i].idx=S[i].items.length-1;inp.value="";save();render()}
+function shrink(f){return new Promise((r,j)=>{const im=new Image();im.onload=()=>{const m=1600,k=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.8))};im.onerror=j;im.src=URL.createObjectURL(f)})}
+function render(){
+  const isHome=view===null;
+  bk.style.display=hm.style.display=isHome?"none":"";
+  homebar.style.display=isHome?"":"none";
+  if(isHome){
+    ttl.textContent="أقسامي";
+    list.innerHTML=S.length?S.map((s,i)=>`<div class="sec"><div class="hd" onclick="openSec(${i})"><b>${esc(s.title)}</b><span class="ar">‹</span></div></div>`).join(""):'<div class="empty">لا توجد أقسام بعد. أضف عنواناً للبدء.</div>';
+  }else{
+    const s=S[view];if(!s){home();return}
+    ttl.textContent=s.title;
+    const i=view,n=s.items.length,k=cur(i),t=s.items[k];
+    list.innerHTML=`<div class="sec"><div class="body" style="display:block;padding-top:16px">
+   <input class="big" value="${esc(s.heading)}" placeholder="العنوان الكبير" oninput="setT(${i},this.value)">
+   ${n?`<div class="vw"><img src="${t.img}" onclick="zoom(${i},${k})" ontouchstart="ts(event)" ontouchend="te(event,${i})">
+     ${n>1?`<button class="nav r" onclick="go(${i},-1)">→</button><button class="nav l" onclick="go(${i},1)">←</button>`:""}
+     <span class="cnt">${k+1} / ${n}</span></div>
+   <textarea placeholder="اكتب ما تشاء هنا..." oninput="setX(${i},${k},this.value)">${esc(t.text)}</textarea>
+   <div class="row"><span>
+     <button class="g" onclick="mv(${i},-1)" ${k==0?"disabled style='opacity:.4'":""}>→ تقديم</button>
+     <button class="g" onclick="mv(${i},1)" ${k==n-1?"disabled style='opacity:.4'":""}>تأخير ←</button></span>
+     <button class="d" onclick="delIt(${i},${k})">حذف الصورة</button></div>`:""}
+   <div class="row"><label class="btn g" style="position:relative;overflow:hidden">+ إضافة صور<input type="file" accept="image/*" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0" onchange="addImgs(${i},this)"></label><button class="d" onclick="delSec(${i})">حذف القسم</button></div>
+  </div></div>`;
+  }
+}
+/* zoom */
+let sc=1,tx=0,ty=0,t0=null,d0=0,s0=1,lt=0;
+const ap=()=>{zi.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`};
+function zoom(i,k){zi.src=S[i].items[k].img;sc=1;tx=ty=0;ap();zm.style.display="flex"}
+function zc(){zm.style.display="none"}
+function zs(f){sc=Math.min(6,Math.max(1,sc*f));if(sc==1)tx=ty=0;ap()}
+const dist=e=>Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+zm.addEventListener("touchstart",e=>{
+  if(e.target.tagName=="BUTTON")return;
+  if(e.touches.length==2){d0=dist(e);s0=sc;t0=null}
+  else{t0={x:e.touches[0].clientX-tx,y:e.touches[0].clientY-ty};const n=Date.now();if(n-lt<300){sc=sc>1?1:2.5;if(sc==1)tx=ty=0;ap()}lt=n}
+},{passive:true});
+zm.addEventListener("touchmove",e=>{
+  e.preventDefault();
+  if(e.touches.length==2){sc=Math.min(6,Math.max(1,s0*dist(e)/d0));if(sc==1)tx=ty=0;ap()}
+  else if(t0&&sc>1){tx=e.touches[0].clientX-t0.x;ty=e.touches[0].clientY-t0.y;ap()}
+},{passive:false});
+zm.addEventListener("wheel",e=>{e.preventDefault();zs(e.deltaY<0?1.2:1/1.2)},{passive:false});
+/* backup */
+function backup(){
+  const b=new Blob([JSON.stringify(S)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);
+  a.download="sections-backup-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a);a.click();a.remove();
+}
+async function restore(inp){
+  const f=inp.files[0];if(!f)return;
+  try{
+    const d=JSON.parse(await f.text());
+    if(!Array.isArray(d))throw 0;
+    const ids=new Set(S.map(s=>s.id));
+    d.forEach(s=>{if(!ids.has(s.id))S.push(s)});
+    save();render();alert("تمت الاستعادة");
+  }catch(e){alert("ملف غير صالح")}
+  inp.value="";
+}
+load();
+if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+</script>
+</body>
+</html>
