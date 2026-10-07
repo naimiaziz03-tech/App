@@ -49,6 +49,14 @@ select{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(
 .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:14px 0}
 #zm .cnt{bottom:calc(env(safe-area-inset-bottom,0px) + 16px)}
 .sm{padding:5px 12px;font-size:13px;border-radius:10px}
+.txt{position:relative;margin-top:6px}
+.artv{font-size:19px;line-height:1.95;white-space:pre-wrap;word-break:break-word;padding:10px 4px 10px 44px;min-height:3.5em}
+.dots{position:absolute;top:4px;left:0;width:36px;height:36px;border-radius:50%;padding:0;display:grid;place-items:center;background:transparent;color:var(--mut)}
+.dots svg{width:22px;height:22px}
+.tmenu{display:none;position:absolute;top:42px;left:0;background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:6;min-width:150px;overflow:hidden}
+.tmenu button{display:block;width:100%;text-align:right;background:transparent;color:var(--tx);border-radius:0;padding:12px 16px;border-bottom:1px solid var(--bd)}
+.tmenu button:last-child{border-bottom:0}
+textarea.art.ed{border:1px solid var(--ac);border-radius:12px;padding:12px}
 .row .d{font-size:13px;padding:5px 8px}
 .vw{touch-action:pan-y}
 .sln{animation:sn .25s ease}.slp{animation:sp .25s ease}
@@ -68,13 +76,16 @@ textarea{min-height:90px;resize:vertical}
 <body>
 <div id="top"><button class="g ic" id="bk" onclick="back()" style="visibility:hidden" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><h1 id="ttl">أقسامي</h1><button class="g ic" id="hm" onclick="home()" style="visibility:hidden" aria-label="الرئيسية"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></button></div>
 <div id="homebar"><div class="add"><input id="nt" spellcheck="true" autocorrect="on" autocomplete="on" lang="ar" placeholder="عنوان قسم جديد..."><select id="ng"><option value="g1">الاختبارات</option><option value="g2">معدات</option><option value="g3">مخططات</option></select><button onclick="addSec()">إضافة</button></div>
-<div class="add" style="margin-top:-6px">
+<div class="add" style="margin-top:-6px;flex-wrap:wrap">
+  <button class="g" onclick="exportAll()">📦 ملف كامل</button>
   <button class="g" onclick="backup()">⬇ نسخة احتياطية</button>
-  <label class="btn g" style="position:relative;overflow:hidden">⬆ استعادة<input type="file" accept=".json,application/json" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0" onchange="restore(this)"></label>
+  <label class="btn g" style="position:relative;overflow:hidden">⬆ استعادة<input type="file" accept=".html,.htm,.json,text/html,application/json" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0" onchange="restore(this)"></label>
 </div></div>
 <div id="list"></div>
 <div id="zm"><img id="zi"><span class="cnt" id="zcnt"></span><div id="zNav"><button class="nav r" onclick="zgo(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><button class="nav l" onclick="zgo(-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button></div></div>
+<script id="emb" type="application/json"></script>
 <script>
+const SRC="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
 let S=[],db=null;
 const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open("sections-app",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 async function load(){
@@ -85,11 +96,41 @@ async function load(){
     S=(v&&v.length)?v:old;
     if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
   }catch(e){S=old}
-  render();if(S.length)save();
+  await applyEmbedded();render();if(S.length)save();
+}
+function embedded(){try{const t=document.getElementById("emb").textContent.trim();if(!t)return null;const o=JSON.parse(t);return Array.isArray(o.data)?o:null}catch(e){return null}}
+async function applyEmbedded(){
+  const o=embedded();if(!o||!o.data.length)return;
+  let seen="";try{seen=localStorage.getItem("emb_at")||""}catch(e){}
+  if(String(o.at)===seen)return;
+  if(!db){
+    if(!S.length)S=o.data;
+    list.insertAdjacentHTML("beforebegin",'<div class="mut" style="padding:8px 2px">وضع الملف: تعرض كل المحتوى لكن التعديلات لا تُحفظ هنا. لحفظها استورد هذا الملف داخل التطبيق المثبّت بزر «استعادة».</div>');
+    return;
+  }
+  if(!S.length){S=o.data}
+  else if(confirm("هذا الملف يحتوي على "+o.data.length+" قسماً محفوظة داخله.\n\nموافق = استبدال بيانات هذا الجهاز بها\nإلغاء = دمج الأقسام الجديدة فقط")){S=o.data}
+  else{const ids=new Set(S.map(s=>s.id));o.data.forEach(s=>{if(!ids.has(s.id))S.push(s)})}
+  try{localStorage.setItem("emb_at",String(o.at))}catch(e){}
+  save();
+}
+function parseBackup(t){
+  t=t.trim();
+  if(t[0]==="["||t[0]==="{"){const o=JSON.parse(t);return Array.isArray(o)?o:o.data}
+  const m=t.match(/<script id="emb" type="application\/json">([\s\S]*?)<\/script>/);
+  if(!m)throw 0;
+  const o=JSON.parse(m[1]);if(!Array.isArray(o.data))throw 0;return o.data;
+}
+function exportAll(){
+  const j=JSON.stringify({v:1,at:Date.now(),data:S}).replace(/</g,"\\u003c");
+  const html=SRC.replace(/(<script id="emb" type="application\/json">)[\s\S]*?(<\/script>)/,(m,a,b)=>a+j+b);
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));
+  a.download="sections-full-"+new Date().toISOString().slice(0,10)+".html";
+  document.body.appendChild(a);a.click();a.remove();
 }
 function save(){
   if(db){try{db.transaction("kv","readwrite").objectStore("kv").put(S,"secs");return}catch(e){}}
-  try{localStorage.setItem("secs",JSON.stringify(S))}catch(e){alert("المساحة ممتلئة، احذف بعض الصور")}
+  try{localStorage.setItem("secs",JSON.stringify(S))}catch(e){if(!window._w){window._w=1;alert("تعذّر الحفظ على هذا الجهاز. إن كنت تفتح ملفاً مباشرة فاستورده داخل التطبيق المثبّت من زر «استعادة».")}}
 }
 const ICON='<span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>';
 const GR=[{id:"g1",n:"الاختبارات"},{id:"g2",n:"معدات"},{id:"g3",n:"مخططات"}];
@@ -115,7 +156,24 @@ function cur(i){const s=S[i];return Math.max(0,Math.min(s.idx||0,s.items.length-
 function delIt(i,j){if(!confirm("حذف هذه الصورة؟"))return;S[i].items.splice(j,1);S[i].idx=Math.max(0,j-1);save();render()}
 function go(i,d){const n=S[i].items.length;S[i].idx=(cur(i)+d+n)%n;lastDir=d;render()}
 function mv(i,d){const k=cur(i),a=S[i].items,t=k+d;if(t<0||t>=a.length)return;[a[k],a[t]]=[a[t],a[k]];S[i].idx=t;save();render()}
-let sx=0,sy=0,lastDir=0;
+let sx=0,sy=0,lastDir=0,edit=null;
+function txtBlock(i,k,t){
+  if(edit&&edit.i===i&&edit.k===k){
+    return `<div class="txt"><textarea class="art ed" rows="3" spellcheck="true" autocorrect="on" autocomplete="on" autocapitalize="sentences" lang="ar" placeholder="اكتب ما تشاء هنا..." oninput="setX(${i},${k},this.value);fit(this)">${esc(t.text)}</textarea><div class="row"><span></span><button class="sm" onclick="endEdit()">تم</button></div></div>`;
+  }
+  return `<div class="txt"><button class="dots" onclick="tmenu(event)" aria-label="خيارات النص"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><div class="tmenu" id="tm"><button onclick="startEdit(${i},${k})">تعديل النص</button><button onclick="pasteTxt(${i},${k})">لصق</button></div><div class="artv">${t.text?esc(t.text):'<span class="mut">لا يوجد نص. اضغط على النقاط الثلاث للإضافة.</span>'}</div></div>`;
+}
+function tmenu(e){e.stopPropagation();const m=document.getElementById("tm");if(m)m.style.display=m.style.display=="block"?"none":"block"}
+document.addEventListener("click",()=>{const m=document.getElementById("tm");if(m)m.style.display="none"});
+function startEdit(i,k){edit={i,k};render();const t=document.querySelector("textarea.art");if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}}
+function endEdit(){edit=null;render()}
+async function pasteTxt(i,k){
+  try{
+    const c=await navigator.clipboard.readText();
+    if(!c){alert("الحافظة فارغة");return}
+    const it=S[i].items[k];it.text=(it.text?it.text.replace(/\s+$/,"")+"\n\n":"")+c;save();render();
+  }catch(e){startEdit(i,k);alert("اضغط مطولاً داخل المربع ثم اختر «لصق»")}
+}
 function ts(e){sx=e.changedTouches[0].clientX;sy=e.changedTouches[0].clientY}
 function te(e,i){const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3&&S[i].items.length>1)go(i,dx<0?1:-1)}
 function fit(t){t.style.height="auto";t.style.height=t.scrollHeight+"px"}
@@ -127,7 +185,7 @@ function render(){
   bk.style.visibility=hm.style.visibility=isHome?"hidden":"visible";
   homebar.style.display=isHome?"":"none";
   if(isHome){
-    ttl.textContent="أقسامي";
+    ttl.textContent="أقسامي";edit=null;
     list.innerHTML=GR.map(g=>{
       const its=S.map((s,i)=>({s,i})).filter(x=>(x.s.group||"g1")==g.id),op=!!GO[g.id];
       return `<div class="sec ${op?"open":""}"><div class="hd" onclick="togG('${g.id}')"><b>${g.n} <span class="mut">(${its.length})</span></b><span class="ar">‹</span></div>${op?(its.length?its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span>${esc(x.s.title)}</span><span class="ar">‹</span></div>`).join(""):'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
@@ -135,12 +193,13 @@ function render(){
     const s=S[view];if(!s){home();return}
     ttl.innerHTML=ICON;
     const i=view,n=s.items.length,k=cur(i),t=s.items[k];
+    if(edit&&(edit.i!==i||edit.k!==k))edit=null;
     list.innerHTML=`<div class="sec"><div class="body" style="display:block;padding-top:16px">
    <input class="big" spellcheck="true" autocorrect="on" autocomplete="on" lang="ar" value="${esc(s.heading)}" placeholder="العنوان الكبير" oninput="setT(${i},this.value)">
    ${n?`<div class="vw" ontouchstart="ts(event)" ontouchend="te(event,${i})"><img class="${lastDir?(lastDir>0?'sln':'slp'):''}" src="${t.img}" onclick="zoom(${i},${k})">
      ${n>1?`<button class="nav r" onclick="go(${i},1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><button class="nav l" onclick="go(${i},-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>`:""}
      <span class="cnt">${k+1} / ${n}</span></div>
-   <textarea class="art" rows="1" spellcheck="true" autocorrect="on" autocomplete="on" autocapitalize="sentences" lang="ar" placeholder="اكتب ما تشاء هنا..." oninput="setX(${i},${k},this.value);fit(this)">${esc(t.text)}</textarea>
+   ${txtBlock(i,k,t)}
    <div class="row"><span>
      <button class="g sm" onclick="mv(${i},-1)" ${k==0?"disabled style='opacity:.4'":""}>تقديم</button>
      <button class="g sm" onclick="mv(${i},1)" ${k==n-1?"disabled style='opacity:.4'":""}>تأخير</button></span>
@@ -193,7 +252,7 @@ function backup(){
 async function restore(inp){
   const f=inp.files[0];if(!f)return;
   try{
-    const d=JSON.parse(await f.text());
+    const d=parseBackup(await f.text());
     if(!Array.isArray(d))throw 0;
     if(confirm("موافق = استبدال كل بيانات هذا الجهاز بالنسخة (تظهر التعديلات كما هي في النسخة)\n\nإلغاء = دمج الأقسام الجديدة فقط دون المساس بالموجود")){
       S=d;
