@@ -59,6 +59,16 @@ select{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(
 textarea.art.ed{border:1px solid var(--ac);border-radius:12px;padding:12px}
 .row .d{font-size:13px;padding:5px 8px}
 .vw{touch-action:pan-y}
+#mb,#hm{grid-column:3;grid-row:1}
+#hmenu{display:none;position:absolute;left:0;top:56px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:20;min-width:190px;overflow:hidden}
+#hmenu.show{display:block}
+#hmenu button,#hmenu .mi{display:block;width:100%;text-align:right;background:transparent;color:var(--tx);border:0;border-radius:0;padding:14px 16px;font:inherit;position:relative;cursor:pointer}
+#hmenu>*+*{border-top:1px solid var(--bd)}
+#hmenu .mi input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0}
+.fc{width:100%;padding:28px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.fi{width:72px;height:88px;border-radius:12px;background:var(--ac);color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px}
+.fn{font-weight:600;overflow-wrap:anywhere}.fs{color:var(--mut);font-size:13px}
+.fb{display:flex;gap:8px}
 .sln{animation:sn .25s ease}.slp{animation:sp .25s ease}
 @keyframes sn{from{opacity:.2;transform:translateX(40px)}to{opacity:1;transform:none}}
 @keyframes sp{from{opacity:.2;transform:translateX(-40px)}to{opacity:1;transform:none}}
@@ -74,13 +84,9 @@ textarea{min-height:90px;resize:vertical}
 </style>
 </head>
 <body>
-<div id="top"><button class="g ic" id="bk" onclick="back()" style="visibility:hidden" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><h1 id="ttl">أقسامي</h1><button class="g ic" id="hm" onclick="home()" style="visibility:hidden" aria-label="الرئيسية"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></button></div>
+<div id="top"><button class="g ic" id="bk" onclick="back()" style="visibility:hidden" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><h1 id="ttl">أقسامي</h1><button class="g ic" id="hm" onclick="home()" style="visibility:hidden" aria-label="الرئيسية"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></button><button class="g ic" id="mb" onclick="toggleMain(event)" aria-label="القائمة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div id="hmenu" onclick="event.stopPropagation()"><button onclick="exportAll();closeMain()">📦 ملف كامل</button><button onclick="backup();closeMain()">⬇ نسخة احتياطية</button><label class="mi">⬆ استعادة<input type="file" accept=".html,.htm,.json,text/html,application/json" onchange="restore(this)"></label></div></div>
 <div id="homebar"><div class="add"><input id="nt" spellcheck="true" autocorrect="on" autocomplete="on" lang="ar" placeholder="عنوان قسم جديد..."><select id="ng"><option value="g1">الاختبارات</option><option value="g2">معدات</option><option value="g3">مخططات</option></select><button onclick="addSec()">إضافة</button></div>
-<div class="add" style="margin-top:-6px;flex-wrap:wrap">
-  <button class="g" onclick="exportAll()">📦 ملف كامل</button>
-  <button class="g" onclick="backup()">⬇ نسخة احتياطية</button>
-  <label class="btn g" style="position:relative;overflow:hidden">⬆ استعادة<input type="file" accept=".html,.htm,.json,text/html,application/json" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0" onchange="restore(this)"></label>
-</div></div>
+</div>
 <div id="list"></div>
 <div id="zm"><img id="zi"><span class="cnt" id="zcnt"></span><div id="zNav"><button class="nav r" onclick="zgo(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><button class="nav l" onclick="zgo(-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button></div></div>
 <script id="emb" type="application/json"></script>
@@ -153,7 +159,7 @@ function delSec(i){if(confirm("حذف هذا القسم؟")){S.splice(i,1);save(
 function setT(i,v){S[i].heading=v;S[i].title=v||S[i].title;save();0}
 function setX(i,j,v){S[i].items[j].text=v;save()}
 function cur(i){const s=S[i];return Math.max(0,Math.min(s.idx||0,s.items.length-1))}
-function delIt(i,j){if(!confirm("حذف هذه الصورة؟"))return;S[i].items.splice(j,1);S[i].idx=Math.max(0,j-1);save();render()}
+function delIt(i,j){if(!confirm("حذف هذا العنصر؟"))return;S[i].items.splice(j,1);S[i].idx=Math.max(0,j-1);save();render()}
 function go(i,d){const n=S[i].items.length;S[i].idx=(cur(i)+d+n)%n;lastDir=d;render()}
 function mv(i,d){const k=cur(i),a=S[i].items,t=k+d;if(t<0||t>=a.length)return;[a[k],a[t]]=[a[t],a[k]];S[i].idx=t;save();render()}
 let sx=0,sy=0,lastDir=0,edit=null;
@@ -178,11 +184,32 @@ function ts(e){sx=e.changedTouches[0].clientX;sy=e.changedTouches[0].clientY}
 function te(e,i){const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3&&S[i].items.length>1)go(i,dx<0?1:-1)}
 function fit(t){t.style.height="auto";t.style.height=t.scrollHeight+"px"}
 addEventListener("resize",()=>document.querySelectorAll("textarea.art").forEach(fit));
-async function addImgs(i,inp){const fs=[...inp.files];for(const f of fs){try{S[i].items.push({img:await shrink(f),text:""})}catch(e){}}S[i].idx=S[i].items.length-1;inp.value="";save();render()}
+function readData(f){return new Promise((r,j)=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.onerror=j;fr.readAsDataURL(f)})}
+async function addImgs(i,inp){
+  const fs=[...inp.files];
+  for(const f of fs){
+    if(f.size>40*1048576){alert("الملف «"+f.name+"» أكبر من 40 ميغابايت وتم تجاوزه");continue}
+    try{
+      if(f.type.startsWith("image/")){
+        try{const d=f.type==="image/gif"?await readData(f):await shrink(f);S[i].items.push({img:d,text:""});continue}catch(e){}
+      }
+      S[i].items.push({file:{name:f.name,type:f.type||"application/octet-stream",size:f.size,data:await readData(f)},text:""});
+    }catch(e){}
+  }
+  S[i].idx=S[i].items.length-1;inp.value="";save();render();
+}
+function fmtSize(b){return b<1048576?Math.max(1,Math.round(b/1024))+" ك.ب":(b/1048576).toFixed(1)+" م.ب"}
+function fileCard(i,k,t){
+  const f=t.file||{name:"ملف",size:0},p=f.name.split("."),ext=(p.length>1?p.pop():"FILE").slice(0,4).toUpperCase();
+  return `<div class="fc ${lastDir?(lastDir>0?"sln":"slp"):""}"><div class="fi">${esc(ext)}</div><div class="fn">${esc(f.name)}</div><div class="fs">${fmtSize(f.size||0)}</div><div class="fb"><button onclick="fileOpen(${i},${k})">فتح</button><button class="g" onclick="fileSave(${i},${k})">حفظ</button></div></div>`;
+}
+function dataBlob(d,t){const p=d.split(","),bin=atob(p[1]),u=new Uint8Array(bin.length);for(let x=0;x<bin.length;x++)u[x]=bin.charCodeAt(x);return new Blob([u],{type:t})}
+function fileOpen(i,k){const f=S[i].items[k].file,u=URL.createObjectURL(dataBlob(f.data,f.type));const w=window.open(u,"_blank");if(!w)fileSave(i,k)}
+function fileSave(i,k){const f=S[i].items[k].file,a=document.createElement("a");a.href=URL.createObjectURL(dataBlob(f.data,f.type));a.download=f.name;document.body.appendChild(a);a.click();a.remove()}
 function shrink(f){return new Promise((r,j)=>{const im=new Image();im.onload=()=>{const m=1600,k=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.8))};im.onerror=j;im.src=URL.createObjectURL(f)})}
 function render(){
   const isHome=view===null;
-  bk.style.visibility=hm.style.visibility=isHome?"hidden":"visible";
+  bk.style.visibility=isHome?"hidden":"visible";hm.style.visibility="visible";hm.style.display=isHome?"none":"grid";mb.style.display=isHome?"grid":"none";closeMain();
   homebar.style.display=isHome?"":"none";
   if(isHome){
     ttl.textContent="أقسامي";edit=null;
@@ -196,16 +223,16 @@ function render(){
     if(edit&&(edit.i!==i||edit.k!==k))edit=null;
     list.innerHTML=`<div class="sec"><div class="body" style="display:block;padding-top:16px">
    <input class="big" spellcheck="true" autocorrect="on" autocomplete="on" lang="ar" value="${esc(s.heading)}" placeholder="العنوان الكبير" oninput="setT(${i},this.value)">
-   ${n?`<div class="vw" ontouchstart="ts(event)" ontouchend="te(event,${i})"><img class="${lastDir?(lastDir>0?'sln':'slp'):''}" src="${t.img}" onclick="zoom(${i},${k})">
+   ${n?`<div class="vw" ontouchstart="ts(event)" ontouchend="te(event,${i})">${t.img?`<img class="${lastDir?(lastDir>0?'sln':'slp'):''}" src="${t.img}" onclick="zoom(${i},${k})">`:fileCard(i,k,t)}
      ${n>1?`<button class="nav r" onclick="go(${i},1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><button class="nav l" onclick="go(${i},-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>`:""}
      <span class="cnt">${k+1} / ${n}</span></div>
    ${txtBlock(i,k,t)}
    <div class="row"><span>
      <button class="g sm" onclick="mv(${i},-1)" ${k==0?"disabled style='opacity:.4'":""}>تقديم</button>
      <button class="g sm" onclick="mv(${i},1)" ${k==n-1?"disabled style='opacity:.4'":""}>تأخير</button></span>
-     <button class="d" onclick="delIt(${i},${k})">حذف الصورة</button></div>`:""}
+     <button class="d" onclick="delIt(${i},${k})">حذف</button></div>`:""}
    <div class="chips"><span class="mut">نقل القسم إلى:</span>${GR.map(g=>`<button class="${(s.group||"g1")==g.id?"":"g"} sm" onclick="setG(${i},'${g.id}')">${g.n}</button>`).join("")}</div>
-   <div class="row"><label class="btn g" style="position:relative;overflow:hidden">+ إضافة صور<input type="file" accept="image/*" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0" onchange="addImgs(${i},this)"></label></div>
+   <div class="row"><label class="btn g" style="position:relative;overflow:hidden">+ إضافة صور أو ملفات<input type="file" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0" onchange="addImgs(${i},this)"></label></div>
   </div></div>`;
     document.querySelectorAll("textarea.art").forEach(fit);
     lastDir=0;
@@ -216,7 +243,7 @@ let sc=1,tx=0,ty=0,t0=null,d0=0,s0=1,lt=0,zI=0,zK=0,zsx=0,zsy=0,zmulti=false;
 const ap=()=>{zi.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`};
 function zshow(){const n=S[zI].items.length;zi.src=S[zI].items[zK].img;sc=1;tx=ty=0;ap();zcnt.textContent=(zK+1)+" / "+n;zNav.style.display=n>1?"":"none"}
 function zoom(i,k){zI=i;zK=k;zshow();zm.style.display="flex";try{history.pushState({z:1},"")}catch(e){}}
-function zgo(d){const n=S[zI].items.length;zK=(zK+d+n)%n;S[zI].idx=zK;save();zshow()}
+function zgo(d){const a=S[zI].items,n=a.length;let x=zK;for(let c=0;c<n;c++){x=(x+d+n)%n;if(a[x].img)break}if(!a[x].img||x===zK)return;zK=x;S[zI].idx=zK;save();zshow()}
 function zclose(){if(zm.style.display=="none")return;zm.style.display="none";render()}
 function zs(f){sc=Math.min(6,Math.max(1,sc*f));if(sc==1)tx=ty=0;ap()}
 const dist=e=>Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
@@ -243,13 +270,16 @@ zm.addEventListener("touchend",e=>{
 },{passive:true});
 zm.addEventListener("wheel",e=>{e.preventDefault();zs(e.deltaY<0?1.2:1/1.2)},{passive:false});
 /* backup */
+function toggleMain(e){e.stopPropagation();hmenu.classList.toggle("show")}
+function closeMain(){hmenu.classList.remove("show")}
+document.addEventListener("click",closeMain);
 function backup(){
   const b=new Blob([JSON.stringify(S)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(b);
   a.download="sections-backup-"+new Date().toISOString().slice(0,10)+".json";
   document.body.appendChild(a);a.click();a.remove();
 }
-async function restore(inp){
+async function restore(inp){closeMain();
   const f=inp.files[0];if(!f)return;
   try{
     const d=parseBackup(await f.text());
