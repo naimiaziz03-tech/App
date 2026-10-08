@@ -69,6 +69,13 @@ img{-webkit-user-drag:none;user-drag:none}
 .pgb{display:flex;flex-direction:column;flex:1}
 body:not(.home) #list{flex:1;display:flex;flex-direction:column}
 body:not(.home) #list>.sec{flex:1;display:flex;flex-direction:column}
+.srow .rt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lines{width:38px;height:38px;border-radius:50%;padding:0;display:grid;place-items:center;background:transparent;color:var(--mut);border:0;margin-inline:6px}
+.lines svg{width:22px;height:22px}
+#asheet{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:98;display:none;align-items:flex-end}
+#ash{background:var(--card);width:100%;max-width:640px;margin:0 auto;border-radius:18px 18px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 16px);display:grid;gap:10px}
+.ast{font-weight:700;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ash .dng{background:#c0392b}
 .chips.bot{margin-top:auto;padding-top:14px;border-top:1px solid var(--bd)}
 #mb,#hm{grid-column:3;grid-row:1}
 #hmenu{display:none;position:absolute;left:0;top:56px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:20;min-width:190px;overflow:hidden}
@@ -100,6 +107,7 @@ textarea{min-height:90px;resize:vertical}
 </div>
 <div id="list"></div>
 <div id="zm"><img id="zi"><span class="cnt" id="zcnt"></span><div id="zNav"><button class="nav r" onclick="zgo(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><button class="nav l" onclick="zgo(-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button></div></div>
+<div id="asheet" onclick="closeAS()"><div id="ash" onclick="event.stopPropagation()"></div></div>
 <script id="emb" type="application/json"></script>
 <script>
 const SRC="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
@@ -226,7 +234,7 @@ function render(){
     ttl.textContent="أقسامي";ttl.onclick=null;ttl.removeAttribute("aria-label");edit=null;
     list.innerHTML=GR.map(g=>{
       const its=S.map((s,i)=>({s,i})).filter(x=>(x.s.group||"g1")==g.id),op=!!GO[g.id];
-      return `<div class="sec ${op?"open":""}"><div class="hd" onclick="togG('${g.id}')"><b>${g.n} <span class="mut">(${its.length})</span></b><span class="ar">‹</span></div>${op?(its.length?its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span>${esc(x.s.title)}</span><span class="ar">‹</span></div>`).join(""):'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
+      return `<div class="sec ${op?"open":""}"><div class="hd" onclick="togG('${g.id}')"><b>${g.n} <span class="mut">(${its.length})</span></b><span class="ar">‹</span></div>${op?(its.length?its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span class="rt">${esc(x.s.title)}</span><button class="lines" onclick="event.stopPropagation();secMenu(${x.i})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><span class="ar">‹</span></div>`).join(""):'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
   }else{
     const s=S[view];if(!s){home();return}
     ttl.innerHTML='<span class="ttx">'+esc(s.title)+'</span>';ttl.onclick=null;ttl.removeAttribute("aria-label");
@@ -280,6 +288,11 @@ zm.addEventListener("touchend",e=>{
 },{passive:true});
 zm.addEventListener("wheel",e=>{e.preventDefault();zs(e.deltaY<0?1.2:1/1.2)},{passive:false});
 /* backup */
+let asIdx=-1;
+function secMenu(i){asIdx=i;ash.innerHTML='<div class="ast">'+esc(S[i].title)+'</div><button onclick="secRename()">تعديل الاسم</button><button class="dng" onclick="secDelete()">حذف القسم</button><button class="g" onclick="closeAS()">إلغاء</button>';asheet.style.display="flex"}
+function closeAS(){asheet.style.display="none";asIdx=-1}
+function secRename(){const s=S[asIdx];if(!s)return closeAS();const v=prompt("اسم القسم:",s.title);if(v&&v.trim()){s.title=s.heading=v.trim();save()}closeAS();render()}
+function secDelete(){const s=S[asIdx];if(!s)return closeAS();if(confirm("حذف القسم «"+s.title+"» مع كل صوره وملفاته؟ لا يمكن التراجع.")){S.splice(asIdx,1);save()}closeAS();render()}
 function renameSec(){const s=S[view];if(!s)return;const v=prompt("اسم القسم:",s.title);if(v&&v.trim()){s.title=s.heading=v.trim();save()}}
 function toggleMain(e){e.stopPropagation();hmenu.classList.toggle("show")}
 function closeMain(){hmenu.classList.remove("show")}
