@@ -59,6 +59,9 @@ select{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(
 textarea.art.ed{border:1px solid var(--ac);border-radius:12px;padding:12px}
 .row .d{font-size:13px;padding:5px 8px}
 .vw{touch-action:pan-y}
+body{display:flex;flex-direction:column;min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+body.home #list{margin-top:auto}
+#ttl[onclick]{cursor:pointer}
 #mb,#hm{grid-column:3;grid-row:1}
 #hmenu{display:none;position:absolute;left:0;top:56px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:20;min-width:190px;overflow:hidden}
 #hmenu.show{display:block}
@@ -208,21 +211,20 @@ function fileOpen(i,k){const f=S[i].items[k].file,u=URL.createObjectURL(dataBlob
 function fileSave(i,k){const f=S[i].items[k].file,a=document.createElement("a");a.href=URL.createObjectURL(dataBlob(f.data,f.type));a.download=f.name;document.body.appendChild(a);a.click();a.remove()}
 function shrink(f){return new Promise((r,j)=>{const im=new Image();im.onload=()=>{const m=1600,k=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.8))};im.onerror=j;im.src=URL.createObjectURL(f)})}
 function render(){
-  const isHome=view===null;
+  const isHome=view===null;document.body.classList.toggle("home",isHome);
   bk.style.visibility=isHome?"hidden":"visible";hm.style.visibility="visible";hm.style.display=isHome?"none":"grid";mb.style.display=isHome?"grid":"none";closeMain();
   homebar.style.display=isHome?"":"none";
   if(isHome){
-    ttl.textContent="أقسامي";edit=null;
+    ttl.textContent="أقسامي";ttl.onclick=null;ttl.removeAttribute("aria-label");edit=null;
     list.innerHTML=GR.map(g=>{
       const its=S.map((s,i)=>({s,i})).filter(x=>(x.s.group||"g1")==g.id),op=!!GO[g.id];
       return `<div class="sec ${op?"open":""}"><div class="hd" onclick="togG('${g.id}')"><b>${g.n} <span class="mut">(${its.length})</span></b><span class="ar">‹</span></div>${op?(its.length?its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span>${esc(x.s.title)}</span><span class="ar">‹</span></div>`).join(""):'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
   }else{
     const s=S[view];if(!s){home();return}
-    ttl.innerHTML=ICON;
+    ttl.innerHTML=ICON;ttl.onclick=renameSec;ttl.setAttribute("aria-label","تغيير اسم القسم");
     const i=view,n=s.items.length,k=cur(i),t=s.items[k];
     if(edit&&(edit.i!==i||edit.k!==k))edit=null;
     list.innerHTML=`<div class="sec"><div class="body" style="display:block;padding-top:16px">
-   <input class="big" spellcheck="true" autocorrect="on" autocomplete="on" lang="ar" value="${esc(s.heading)}" placeholder="العنوان الكبير" oninput="setT(${i},this.value)">
    ${n?`<div class="vw" ontouchstart="ts(event)" ontouchend="te(event,${i})">${t.img?`<img class="${lastDir?(lastDir>0?'sln':'slp'):''}" src="${t.img}" onclick="zoom(${i},${k})">`:fileCard(i,k,t)}
      ${n>1?`<button class="nav r" onclick="go(${i},1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><button class="nav l" onclick="go(${i},-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>`:""}
      <span class="cnt">${k+1} / ${n}</span></div>
@@ -270,6 +272,7 @@ zm.addEventListener("touchend",e=>{
 },{passive:true});
 zm.addEventListener("wheel",e=>{e.preventDefault();zs(e.deltaY<0?1.2:1/1.2)},{passive:false});
 /* backup */
+function renameSec(){const s=S[view];if(!s)return;const v=prompt("اسم القسم:",s.title);if(v&&v.trim()){s.title=s.heading=v.trim();save()}}
 function toggleMain(e){e.stopPropagation();hmenu.classList.toggle("show")}
 function closeMain(){hmenu.classList.remove("show")}
 document.addEventListener("click",closeMain);
