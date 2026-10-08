@@ -61,7 +61,12 @@ textarea.art.ed{border:1px solid var(--ac);border-radius:12px;padding:12px}
 .vw{touch-action:pan-y}
 body{display:flex;flex-direction:column;min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
 body.home #list{margin-top:auto}
-#ttl[onclick]{cursor:pointer}
+#top h1{min-width:0;font-size:20px;font-weight:700}
+.ttx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.pgb{display:flex;flex-direction:column;flex:1}
+body:not(.home) #list{flex:1;display:flex;flex-direction:column}
+body:not(.home) #list>.sec{flex:1;display:flex;flex-direction:column}
+.chips.bot{margin-top:auto;padding-top:14px;border-top:1px solid var(--bd)}
 #mb,#hm{grid-column:3;grid-row:1}
 #hmenu{display:none;position:absolute;left:0;top:56px;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:20;min-width:190px;overflow:hidden}
 #hmenu.show{display:block}
@@ -221,10 +226,10 @@ function render(){
       return `<div class="sec ${op?"open":""}"><div class="hd" onclick="togG('${g.id}')"><b>${g.n} <span class="mut">(${its.length})</span></b><span class="ar">‹</span></div>${op?(its.length?its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span>${esc(x.s.title)}</span><span class="ar">‹</span></div>`).join(""):'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
   }else{
     const s=S[view];if(!s){home();return}
-    ttl.innerHTML=ICON;ttl.onclick=renameSec;ttl.setAttribute("aria-label","تغيير اسم القسم");
+    ttl.innerHTML='<span class="ttx">'+esc(s.title)+'</span>';ttl.onclick=null;ttl.removeAttribute("aria-label");
     const i=view,n=s.items.length,k=cur(i),t=s.items[k];
     if(edit&&(edit.i!==i||edit.k!==k))edit=null;
-    list.innerHTML=`<div class="sec"><div class="body" style="display:block;padding-top:16px">
+    list.innerHTML=`<div class="sec"><div class="body pgb" style="padding-top:16px">
    ${n?`<div class="vw" ontouchstart="ts(event)" ontouchend="te(event,${i})">${t.img?`<img class="${lastDir?(lastDir>0?'sln':'slp'):''}" src="${t.img}" onclick="zoom(${i},${k})">`:fileCard(i,k,t)}
      ${n>1?`<button class="nav r" onclick="go(${i},1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><button class="nav l" onclick="go(${i},-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>`:""}
      <span class="cnt">${k+1} / ${n}</span></div>
@@ -233,8 +238,8 @@ function render(){
      <button class="g sm" onclick="mv(${i},-1)" ${k==0?"disabled style='opacity:.4'":""}>تقديم</button>
      <button class="g sm" onclick="mv(${i},1)" ${k==n-1?"disabled style='opacity:.4'":""}>تأخير</button></span>
      <button class="d" onclick="delIt(${i},${k})">حذف</button></div>`:""}
-   <div class="chips"><span class="mut">نقل القسم إلى:</span>${GR.map(g=>`<button class="${(s.group||"g1")==g.id?"":"g"} sm" onclick="setG(${i},'${g.id}')">${g.n}</button>`).join("")}</div>
    <div class="row"><label class="btn g" style="position:relative;overflow:hidden">+ إضافة صور أو ملفات<input type="file" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0" onchange="addImgs(${i},this)"></label></div>
+   <div class="chips bot"><span class="mut">نقل القسم إلى:</span>${GR.map(g=>`<button class="${(s.group||"g1")==g.id?"":"g"} sm" onclick="setG(${i},'${g.id}')">${g.n}</button>`).join("")}</div>
   </div></div>`;
     document.querySelectorAll("textarea.art").forEach(fit);
     lastDir=0;
