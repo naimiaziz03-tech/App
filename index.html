@@ -61,6 +61,9 @@ textarea.art.ed{border:1px solid var(--ac);border-radius:12px;padding:12px}
 .vw{touch-action:pan-y}
 body{display:flex;flex-direction:column;min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
 body.home #list{margin-top:auto}
+*{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img{-webkit-user-drag:none;user-drag:none}
 #top h1{min-width:0;font-size:20px;font-weight:700}
 .ttx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .pgb{display:flex;flex-direction:column;flex:1}
@@ -281,6 +284,7 @@ function renameSec(){const s=S[view];if(!s)return;const v=prompt("اسم الق�
 function toggleMain(e){e.stopPropagation();hmenu.classList.toggle("show")}
 function closeMain(){hmenu.classList.remove("show")}
 document.addEventListener("click",closeMain);
+document.addEventListener("contextmenu",e=>{if(!e.target.closest("textarea,input"))e.preventDefault()});
 function backup(){
   const b=new Blob([JSON.stringify(S)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(b);
