@@ -69,6 +69,7 @@ img{-webkit-user-drag:none;user-drag:none}
 .pgb{display:flex;flex-direction:column;flex:1}
 body:not(.home) #list{flex:1;display:flex;flex-direction:column}
 body:not(.home) #list>.sec{flex:1;display:flex;flex-direction:column}
+.mgb{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px dashed var(--ac);color:var(--ac);border-radius:12px;padding:8px 12px;margin-bottom:10px;font-size:14px}
 .srow .rt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lines{width:38px;height:38px;border-radius:50%;padding:0;display:grid;place-items:center;background:transparent;color:var(--mut);border:0;margin-inline:6px}
 .lines svg{width:22px;height:22px}
@@ -102,7 +103,7 @@ textarea{min-height:90px;resize:vertical}
 </style>
 </head>
 <body>
-<div id="top"><button class="g ic" id="bk" onclick="back()" style="visibility:hidden" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><h1 id="ttl">أقسامي</h1><button class="g ic" id="hm" onclick="home()" style="visibility:hidden" aria-label="الرئيسية"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></button><button class="g ic" id="mb" onclick="toggleMain(event)" aria-label="القائمة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div id="hmenu" onclick="event.stopPropagation()"><button onclick="exportAll();closeMain()">📦 ملف كامل</button><button onclick="backup();closeMain()">⬇ نسخة احتياطية</button><label class="mi">⬆ استعادة<input type="file" accept=".html,.htm,.json,text/html,application/json" onchange="restore(this)"></label></div></div>
+<div id="top"><button class="g ic" id="bk" onclick="back()" style="visibility:hidden" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><h1 id="ttl">أقسامي</h1><button class="g ic" id="hm" onclick="home()" style="visibility:hidden" aria-label="الرئيسية"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></button><button class="g ic" id="mb" onclick="toggleMain(event)" aria-label="القائمة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div id="hmenu" onclick="event.stopPropagation()"><button onclick="exportAll();closeMain()">📦 ملف كامل</button><button id="mgBtn" onclick="toggleManage();closeMain()">✏️ تعديل وحذف</button><button onclick="backup();closeMain()">⬇ نسخة احتياطية</button><label class="mi">⬆ استعادة<input type="file" accept=".html,.htm,.json,text/html,application/json" onchange="restore(this)"></label></div></div>
 <div id="homebar"><div class="add"><input id="nt" spellcheck="true" autocorrect="on" autocomplete="on" lang="ar" placeholder="عنوان قسم جديد..."><select id="ng"><option value="g1">الاختبارات</option><option value="g2">معدات</option><option value="g3">مخططات</option></select><button onclick="addSec()">إضافة</button></div>
 </div>
 <div id="list"></div>
@@ -232,9 +233,9 @@ function render(){
   homebar.style.display=isHome?"":"none";
   if(isHome){
     ttl.textContent="أقسامي";ttl.onclick=null;ttl.removeAttribute("aria-label");edit=null;
-    list.innerHTML=GR.map(g=>{
+    list.innerHTML=(manage?'<div class="mgb"><span>وضع التعديل والحذف: اضغط ☰ بجانب العنوان</span><button class="sm" onclick="toggleManage()">تم</button></div>':"")+GR.map(g=>{
       const its=S.map((s,i)=>({s,i})).filter(x=>(x.s.group||"g1")==g.id),op=!!GO[g.id];
-      return `<div class="sec ${op?"open":""}"><div class="hd" onclick="togG('${g.id}')"><b>${g.n} <span class="mut">(${its.length})</span></b><span class="ar">‹</span></div>${op?(its.length?its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span class="rt">${esc(x.s.title)}</span><button class="lines" onclick="event.stopPropagation();secMenu(${x.i})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><span class="ar">‹</span></div>`).join(""):'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
+      return `<div class="sec ${op?"open":""}"><div class="hd" onclick="togG('${g.id}')"><b>${g.n} <span class="mut">(${its.length})</span></b><span class="ar">‹</span></div>${op?(its.length?its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span class="rt">${esc(x.s.title)}</span>${manage?`<button class="lines" onclick="event.stopPropagation();secMenu(${x.i})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>`:""}<span class="ar">‹</span></div>`).join(""):'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
   }else{
     const s=S[view];if(!s){home();return}
     ttl.innerHTML='<span class="ttx">'+esc(s.title)+'</span>';ttl.onclick=null;ttl.removeAttribute("aria-label");
@@ -288,7 +289,8 @@ zm.addEventListener("touchend",e=>{
 },{passive:true});
 zm.addEventListener("wheel",e=>{e.preventDefault();zs(e.deltaY<0?1.2:1/1.2)},{passive:false});
 /* backup */
-let asIdx=-1;
+let asIdx=-1,manage=false;
+function toggleManage(){manage=!manage;if(manage)GR.forEach(g=>{GO[g.id]=true});try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}mgBtn.textContent=manage?"✔ إنهاء التعديل والحذف":"✏️ تعديل وحذف";render()}
 function secMenu(i){asIdx=i;ash.innerHTML='<div class="ast">'+esc(S[i].title)+'</div><button onclick="secRename()">تعديل الاسم</button><button class="dng" onclick="secDelete()">حذف القسم</button><button class="g" onclick="closeAS()">إلغاء</button>';asheet.style.display="flex"}
 function closeAS(){asheet.style.display="none";asIdx=-1}
 function secRename(){const s=S[asIdx];if(!s)return closeAS();const v=prompt("اسم القسم:",s.title);if(v&&v.trim()){s.title=s.heading=v.trim();save()}closeAS();render()}
