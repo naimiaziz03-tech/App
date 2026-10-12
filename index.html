@@ -86,6 +86,11 @@ body:not(.home) #list>.sec{flex:1;display:flex;flex-direction:column}
 #fvb canvas,#fvb img{max-width:100%;height:auto;background:#fff;border-radius:6px}
 #fvb video{max-width:100%;max-height:100%}
 #fvb pre{white-space:pre-wrap;overflow-wrap:anywhere;align-self:stretch;font:inherit;font-size:16px;line-height:1.8;margin:0;-webkit-user-select:text;user-select:text}
+#fvb .xl{align-self:stretch;overflow:auto}
+#fvb .xl table{border-collapse:collapse;font-size:14px;direction:ltr;background:var(--card);color:var(--tx)}
+#fvb .xl td,#fvb .xl th{border:1px solid var(--bd);padding:4px 8px;white-space:nowrap}
+#fvb .tabs{display:flex;gap:6px;flex-wrap:wrap;align-self:stretch}
+#fvb .tabs .on{background:var(--ac);color:#fff}
 #fvb .fvm{color:var(--mut);text-align:center;padding:30px 10px;line-height:1.9}
 .lines{width:38px;height:38px;border-radius:50%;padding:0;display:grid;place-items:center;background:transparent;color:var(--mut);border:0;margin-inline:6px}
 .lines svg{width:22px;height:22px}
@@ -238,7 +243,7 @@ async function addImgs(i,inp){
 function fmtSize(b){return b<1048576?Math.max(1,Math.round(b/1024))+" ك.ب":(b/1048576).toFixed(1)+" م.ب"}
 function fileCard(i,k,t){
   const f=t.file||{name:"ملف",size:0},p=f.name.split("."),ext=(p.length>1?p.pop():"FILE").slice(0,4).toUpperCase();
-  return `<div class="fc ${lastDir?(lastDir>0?"sln":"slp"):""}"><div class="fi">${esc(ext)}</div><div class="fn">${esc(f.name)}</div><div class="fs">${fmtSize(f.size||0)}</div><div class="fb"><button onclick="fileOpen(${i},${k})">فتح</button><button class="g" onclick="fileSave(${i},${k})">حفظ</button></div></div>`;
+  return `<div class="fc ${lastDir?(lastDir>0?"sln":"slp"):""}"><div class="fi">${esc(ext)}</div><div class="fn">${esc(f.name)}</div><div class="fs">${fmtSize(f.size||0)}</div><div class="fb"><button onclick="fileOpen(${i},${k})">فتح</button>${isPdf(f)?"":`<button class="g" onclick="fileSave(${i},${k})">حفظ</button>`}</div></div>`;
 }
 function dataBlob(d,t){const p=d.split(","),bin=atob(p[1]),u=new Uint8Array(bin.length);for(let x=0;x<bin.length;x++)u[x]=bin.charCodeAt(x);return new Blob([u],{type:t})}
 function fileOpen(i,k){const f=S[i].items[k].file;if(f)fvOpen(f)}
@@ -255,7 +260,7 @@ function render(){
             its=all.filter(x=>x.s.kind!=="gfile"),fls=all.filter(x=>x.s.kind==="gfile"),op=!!GO[g.id];
       const ln=i=>manage?`<button class="lines" onclick="event.stopPropagation();secMenu(${i})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>`:"";
       const rows=its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span class="rt">${x.s.kind==="folder"?"📁 ":""}${esc(x.s.title)}${x.s.kind==="folder"?` <span class="mut">(${(x.s.files||[]).length})</span>`:""}</span>${ln(x.i)}<span class="ar">‹</span></div>`).join("");
-      const frows=fls.map(x=>{const f=x.s.file||{},p=(f.name||"").split("."),ext=(p.length>1?p.pop():"FILE").slice(0,4).toUpperCase();return `<div class="srow" onclick="gOpen(${x.i})"><span class="fx">${esc(ext)}</span><span class="rt">${esc(x.s.title)} <span class="mut">${fmtSize(f.size||0)}</span></span><button class="g sm" onclick="event.stopPropagation();gSave(${x.i})">حفظ</button>${ln(x.i)}</div>`}).join("");
+      const frows=fls.map(x=>{const f=x.s.file||{},p=(f.name||"").split("."),ext=(p.length>1?p.pop():"FILE").slice(0,4).toUpperCase();return `<div class="srow" onclick="gOpen(${x.i})"><span class="fx">${esc(ext)}</span><span class="rt">${esc(x.s.title)} <span class="mut">${fmtSize(f.size||0)}</span></span>${isPdf(f)?"":`<button class="g sm" onclick="event.stopPropagation();gSave(${x.i})">حفظ</button>`}${ln(x.i)}</div>`}).join("");
       const addf=g.id==="g4"?`<div class="srow" onclick="addFolder()"><span class="rt" style="color:var(--ac)">+ إضافة مجلد</span></div>`:"";
       return `<div class="sec gc ${op?"open":""}" style="--gc:${g.c}"><div class="hd" onclick="togG('${g.id}')"><b><bdi>${g.n}</bdi> <span class="mut">(${all.length})</span></b><span class="ar">‹</span></div>${op?((addf+rows+frows)||'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
   }else{
@@ -313,8 +318,9 @@ zm.addEventListener("touchend",e=>{
 zm.addEventListener("wheel",e=>{e.preventDefault();zs(e.deltaY<0?1.2:1/1.2)},{passive:false});
 /* backup */
 let asIdx=-1,manage=false,asFile=-1,fvCur=null;
+const isPdf=f=>((f.type||"").toLowerCase()==="application/pdf"||/\.pdf$/i.test(f.name||""));
 function fvOpen(f){
-  fvCur=f;fvn.textContent=f.name;fvsv.style.display=((f.type||"").toLowerCase()==="application/pdf"||/\.pdf$/i.test(f.name||""))?"none":"";fv.style.display="flex";fvb.innerHTML='<div class="fvm">جارٍ التحميل…</div>';
+  fvCur=f;fvn.textContent=f.name;fvsv.style.display=isPdf(f)?"none":"";fv.style.display="flex";fvb.innerHTML='<div class="fvm">جارٍ التحميل…</div>';
   try{history.pushState({fv:1,v:view},"")}catch(e){}
   fvRender(f);
 }
@@ -336,12 +342,27 @@ async function fvPdf(b){
     await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
   }
 }
+async function fvSheet(b){
+  if(!window.XLSX){await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+  const wb=XLSX.read(await b.arrayBuffer(),{type:"array"});
+  fvb.innerHTML="";
+  const bar=document.createElement("div");bar.className="tabs";
+  const box=document.createElement("div");box.className="xl";
+  const show=k=>{box.innerHTML=XLSX.utils.sheet_to_html(wb.Sheets[wb.SheetNames[k]]);[...bar.children].forEach((c,j)=>c.classList.toggle("on",j===k))};
+  wb.SheetNames.forEach((nm,k)=>{const bt=document.createElement("button");bt.textContent=nm;bt.className="g sm";bt.onclick=()=>show(k);bar.appendChild(bt)});
+  if(wb.SheetNames.length>1)fvb.appendChild(bar);
+  fvb.appendChild(box);show(0);
+}
 async function fvRender(f){
   const t=(f.type||"").toLowerCase(),n=(f.name||"").toLowerCase(),b=dataBlob(f.data,f.type),u=URL.createObjectURL(b);
   try{
     if(t.startsWith("image/")){fvb.innerHTML="";const im=new Image();im.src=u;fvb.appendChild(im);return}
     if(t.startsWith("video/")){fvb.innerHTML='<video controls playsinline src="'+u+'"></video>';return}
     if(t.startsWith("audio/")){fvb.innerHTML='<audio controls src="'+u+'" style="width:100%"></audio>';return}
+    if(/\.(xlsx|xls|xlsm|ods)$/.test(n)||t.includes("spreadsheet")||t.includes("ms-excel")){
+      try{await fvSheet(b)}catch(e){fvb.innerHTML='<div class="fvm">تعذّر عرض ملف Excel الآن (يحتاج اتصالاً بالإنترنت في أول مرة).<br>يمكنك الضغط على «حفظ» وفتحه بتطبيق آخر.</div>'}
+      return;
+    }
     if(t.startsWith("text/")||/\.(txt|md|csv|json|log)$/.test(n)){const tx=await b.text();fvb.innerHTML="";const p=document.createElement("pre");p.textContent=tx;fvb.appendChild(p);return}
     if(t==="application/pdf"||n.endsWith(".pdf")){
       try{await fvPdf(b)}catch(e){fvb.innerHTML='<div class="fvm">تعذّر عرض الـPDF الآن (يحتاج اتصالاً بالإنترنت في أول مرة).</div>'}
@@ -364,7 +385,7 @@ function renderFolder(s,i){
   const fs=s.files||[];
   list.innerHTML=`<div class="sec"><div class="body pgb" style="padding-top:4px">
    <div class="srow" style="position:relative;border-top:0"><span class="rt" style="color:var(--ac)">+ إضافة ملفات</span><input type="file" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0" onchange="addFolderFiles(${i},this)"></div>
-   ${fs.length?fs.map((f,j)=>`<div class="srow" onclick="fOpen(${i},${j})"><span class="fx">${esc(fExt(f.name))}</span><span class="rt">${esc(f.name)} <span class="mut">${fmtSize(f.size||0)}</span></span><button class="g sm" onclick="event.stopPropagation();fSave(${i},${j})">حفظ</button><button class="lines" onclick="event.stopPropagation();fMenu(${i},${j})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>`).join(""):'<div class="empty" style="padding:24px 14px">المجلد فارغ. أضف ملفات.</div>'}
+   ${fs.length?fs.map((f,j)=>`<div class="srow" onclick="fOpen(${i},${j})"><span class="fx">${esc(fExt(f.name))}</span><span class="rt">${esc(f.name)} <span class="mut">${fmtSize(f.size||0)}</span></span>${isPdf(f)?"":`<button class="g sm" onclick="event.stopPropagation();fSave(${i},${j})">حفظ</button>`}<button class="lines" onclick="event.stopPropagation();fMenu(${i},${j})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>`).join(""):'<div class="empty" style="padding:24px 14px">المجلد فارغ. أضف ملفات.</div>'}
   </div></div>`;
 }
 function fOpen(i,j){const f=S[i].files[j];if(f)fvOpen(f)}
