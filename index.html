@@ -70,6 +70,7 @@ img{-webkit-user-drag:none;user-drag:none}
 body:not(.home) #list{flex:1;display:flex;flex-direction:column}
 body:not(.home) #list>.sec{flex:1;display:flex;flex-direction:column}
 .mgb{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px dashed var(--ac);color:var(--ac);border-radius:12px;padding:8px 12px;margin-bottom:10px;font-size:14px}
+.fx{background:var(--ac);color:#fff;border-radius:8px;padding:2px 7px;font-size:12px;font-weight:700;margin-inline-end:8px}
 .srow .rt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lines{width:38px;height:38px;border-radius:50%;padding:0;display:grid;place-items:center;background:transparent;color:var(--mut);border:0;margin-inline:6px}
 .lines svg{width:22px;height:22px}
@@ -104,7 +105,7 @@ textarea{min-height:90px;resize:vertical}
 </head>
 <body>
 <div id="top"><button class="g ic" id="bk" onclick="back()" style="visibility:hidden" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><h1 id="ttl">أقسامي</h1><button class="g ic" id="hm" onclick="home()" style="visibility:hidden" aria-label="الرئيسية"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></button><button class="g ic" id="mb" onclick="toggleMain(event)" aria-label="القائمة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div id="hmenu" onclick="event.stopPropagation()"><button onclick="exportAll();closeMain()">📦 ملف كامل</button><button id="mgBtn" onclick="toggleManage();closeMain()">✏️ تعديل وحذف</button><button onclick="backup();closeMain()">⬇ نسخة احتياطية</button><label class="mi">⬆ استعادة<input type="file" accept=".html,.htm,.json,text/html,application/json" onchange="restore(this)"></label></div></div>
-<div id="homebar"><div class="add"><input id="nt" spellcheck="true" autocorrect="on" autocomplete="on" lang="ar" placeholder="عنوان قسم جديد..."><select id="ng"><option value="g1">الاختبارات</option><option value="g2">معدات</option><option value="g3">مخططات</option></select><button onclick="addSec()">إضافة</button></div>
+<div id="homebar"><div class="add"><input id="nt" spellcheck="true" autocorrect="on" autocomplete="on" lang="ar" placeholder="عنوان قسم جديد..."><select id="ng"><option value="g1">Tests</option><option value="g2">Appareillages</option><option value="g3">Schemas</option><option value="g4">Preparation&amp;Compte rendu</option></select><button onclick="addSec()">إضافة</button></div>
 </div>
 <div id="list"></div>
 <div id="zm"><img id="zi"><span class="cnt" id="zcnt"></span><div id="zNav"><button class="nav r" onclick="zgo(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><button class="nav l" onclick="zgo(-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button></div></div>
@@ -122,7 +123,7 @@ async function load(){
     S=(v&&v.length)?v:old;
     if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
   }catch(e){S=old}
-  await applyEmbedded();render();if(S.length)save();
+  await applyEmbedded();migrate();render();if(S.length)save();
 }
 function embedded(){try{const t=document.getElementById("emb").textContent.trim();if(!t)return null;const o=JSON.parse(t);return Array.isArray(o.data)?o:null}catch(e){return null}}
 async function applyEmbedded(){
@@ -159,12 +160,12 @@ function save(){
   try{localStorage.setItem("secs",JSON.stringify(S))}catch(e){if(!window._w){window._w=1;alert("تعذّر الحفظ على هذا الجهاز. إن كنت تفتح ملفاً مباشرة فاستورده داخل التطبيق المثبّت من زر «استعادة».")}}
 }
 const ICON='<span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>';
-const GR=[{id:"g1",n:"الاختبارات"},{id:"g2",n:"معدات"},{id:"g3",n:"مخططات"}];
+const GR=[{id:"g1",n:"Tests"},{id:"g2",n:"Appareillages"},{id:"g3",n:"Schemas"},{id:"g4",n:"Preparation&Compte rendu"}];
 let GO={};try{GO=JSON.parse(localStorage.getItem("go")||"{}")}catch(e){}
 function togG(id){GO[id]=!GO[id];try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}render()}
 function setG(i,g){S[i].group=g;GO[g]=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}save();render()}
 const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-function addSec(){const v=nt.value.trim();if(!v)return;S.unshift({id:Date.now(),title:v,heading:v,items:[],open:true,idx:0,group:ng.value});GO[ng.value]=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}nt.value="";save();render()}
+function addSec(){const v=nt.value.trim();if(!v)return;S.unshift(Object.assign({id:Date.now(),title:v,heading:v,items:[],open:true,idx:0,group:ng.value},ng.value==="g4"?{kind:"folder",files:[]}:{}));GO[ng.value]=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}nt.value="";save();render()}
 let view=null,hist=[];
 async function reloadData(){
   if(!db)return;
@@ -234,12 +235,18 @@ function render(){
   if(isHome){
     ttl.textContent="أقسامي";ttl.onclick=null;ttl.removeAttribute("aria-label");edit=null;
     list.innerHTML=(manage?'<div class="mgb"><span>وضع التعديل والحذف: اضغط ☰ بجانب العنوان</span><button class="sm" onclick="toggleManage()">تم</button></div>':"")+GR.map(g=>{
-      const its=S.map((s,i)=>({s,i})).filter(x=>(x.s.group||"g1")==g.id),op=!!GO[g.id];
-      return `<div class="sec ${op?"open":""}"><div class="hd" onclick="togG('${g.id}')"><b>${g.n} <span class="mut">(${its.length})</span></b><span class="ar">‹</span></div>${op?(its.length?its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span class="rt">${esc(x.s.title)}</span>${manage?`<button class="lines" onclick="event.stopPropagation();secMenu(${x.i})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>`:""}<span class="ar">‹</span></div>`).join(""):'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
+      const all=S.map((s,i)=>({s,i})).filter(x=>(x.s.group||"g1")==g.id),
+            its=all.filter(x=>x.s.kind!=="gfile"),fls=all.filter(x=>x.s.kind==="gfile"),op=!!GO[g.id];
+      const ln=i=>manage?`<button class="lines" onclick="event.stopPropagation();secMenu(${i})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>`:"";
+      const rows=its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span class="rt">${x.s.kind==="folder"?"📁 ":""}${esc(x.s.title)}${x.s.kind==="folder"?` <span class="mut">(${(x.s.files||[]).length})</span>`:""}</span>${ln(x.i)}<span class="ar">‹</span></div>`).join("");
+      const frows=fls.map(x=>{const f=x.s.file||{},p=(f.name||"").split("."),ext=(p.length>1?p.pop():"FILE").slice(0,4).toUpperCase();return `<div class="srow" onclick="gOpen(${x.i})"><span class="fx">${esc(ext)}</span><span class="rt">${esc(x.s.title)} <span class="mut">${fmtSize(f.size||0)}</span></span><button class="g sm" onclick="event.stopPropagation();gSave(${x.i})">حفظ</button>${ln(x.i)}</div>`}).join("");
+      const addf=g.id==="g4"?`<div class="srow" onclick="addFolder()"><span class="rt" style="color:var(--ac)">+ إضافة مجلد</span></div>`:"";
+      return `<div class="sec ${op?"open":""}"><div class="hd" onclick="togG('${g.id}')"><b><bdi>${g.n}</bdi> <span class="mut">(${all.length})</span></b><span class="ar">‹</span></div>${op?((addf+rows+frows)||'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
   }else{
     const s=S[view];if(!s){home();return}
     ttl.innerHTML='<span class="ttx">'+esc(s.title)+'</span>';ttl.onclick=null;ttl.removeAttribute("aria-label");
     const i=view,n=s.items.length,k=cur(i),t=s.items[k];
+    if(s.kind==="folder"){renderFolder(s,i);return}
     if(edit&&(edit.i!==i||edit.k!==k))edit=null;
     list.innerHTML=`<div class="sec"><div class="body pgb" style="padding-top:16px">
    ${n?`<div class="vw" ontouchstart="ts(event)" ontouchend="te(event,${i})">${t.img?`<img class="${lastDir?(lastDir>0?'sln':'slp'):''}" src="${t.img}" onclick="zoom(${i},${k})">`:fileCard(i,k,t)}
@@ -289,12 +296,48 @@ zm.addEventListener("touchend",e=>{
 },{passive:true});
 zm.addEventListener("wheel",e=>{e.preventDefault();zs(e.deltaY<0?1.2:1/1.2)},{passive:false});
 /* backup */
-let asIdx=-1,manage=false;
+let asIdx=-1,manage=false,asFile=-1;
+function addFolder(){const v=prompt("اسم المجلد:");if(!v||!v.trim())return;S.unshift({id:Date.now()*1000+Math.floor(Math.random()*1000),kind:"folder",title:v.trim(),heading:v.trim(),items:[],idx:0,group:"g4",files:[]});GO.g4=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}save();render()}
+async function addFolderFiles(i,inp){
+  const s=S[i];if(!s)return;s.files=s.files||[];
+  for(const f of [...inp.files]){
+    if(f.size>40*1048576){alert("الملف «"+f.name+"» أكبر من 40 ميغابايت وتم تجاوزه");continue}
+    try{s.files.push({name:f.name,type:f.type||"application/octet-stream",size:f.size,data:await readData(f)})}catch(e){}
+  }
+  inp.value="";save();render();
+}
+function fExt(n){const p=(n||"").split(".");return (p.length>1?p.pop():"FILE").slice(0,4).toUpperCase()}
+function renderFolder(s,i){
+  const fs=s.files||[];
+  list.innerHTML=`<div class="sec"><div class="body pgb" style="padding-top:4px">
+   <div class="srow" style="position:relative;border-top:0"><span class="rt" style="color:var(--ac)">+ إضافة ملفات</span><input type="file" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0" onchange="addFolderFiles(${i},this)"></div>
+   ${fs.length?fs.map((f,j)=>`<div class="srow" onclick="fOpen(${i},${j})"><span class="fx">${esc(fExt(f.name))}</span><span class="rt">${esc(f.name)} <span class="mut">${fmtSize(f.size||0)}</span></span><button class="g sm" onclick="event.stopPropagation();fSave(${i},${j})">حفظ</button><button class="lines" onclick="event.stopPropagation();fMenu(${i},${j})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>`).join(""):'<div class="empty" style="padding:24px 14px">المجلد فارغ. أضف ملفات.</div>'}
+  </div></div>`;
+}
+function fOpen(i,j){const f=S[i].files[j];if(!f)return;const w=window.open(URL.createObjectURL(dataBlob(f.data,f.type)),"_blank");if(!w)fSave(i,j)}
+function fSave(i,j){const f=S[i].files[j];if(!f)return;const a=document.createElement("a");a.href=URL.createObjectURL(dataBlob(f.data,f.type));a.download=f.name;document.body.appendChild(a);a.click();a.remove()}
+function fMenu(i,j){asIdx=i;asFile=j;ash.innerHTML='<div class="ast">'+esc(S[i].files[j].name)+'</div><button onclick="fRename()">تعديل الاسم</button><button class="dng" onclick="fDelete()">حذف</button><button class="g" onclick="closeAS()">إلغاء</button>';asheet.style.display="flex"}
+function fRename(){const f=(S[asIdx]||{}).files&&S[asIdx].files[asFile];if(!f)return closeAS();const v=prompt("اسم الملف:",f.name);if(v&&v.trim()){f.name=v.trim();save()}closeAS();render()}
+function fDelete(){const s=S[asIdx],f=s&&s.files&&s.files[asFile];if(!f)return closeAS();if(confirm("حذف الملف «"+f.name+"»؟ لا يمكن التراجع.")){s.files.splice(asFile,1);save()}closeAS();render()}
+function migrate(){
+  const g=S.filter(s=>s.kind==="gfile");if(!g.length)return;
+  S=S.filter(s=>s.kind!=="gfile");
+  S.unshift({id:Date.now()*1000+7,kind:"folder",title:"ملفات",heading:"ملفات",items:[],idx:0,group:"g4",files:g.map(s=>s.file).filter(Boolean)});
+}
+async function addGFiles(inp){
+  for(const f of [...inp.files]){
+    if(f.size>40*1048576){alert("الملف «"+f.name+"» أكبر من 40 ميغابايت وتم تجاوزه");continue}
+    try{S.unshift({id:Date.now()*1000+Math.floor(Math.random()*1000),kind:"gfile",title:f.name,heading:f.name,items:[],idx:0,group:"g4",file:{name:f.name,type:f.type||"application/octet-stream",size:f.size,data:await readData(f)}})}catch(e){}
+  }
+  inp.value="";GO.g4=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}save();render();
+}
+function gOpen(i){const f=S[i]&&S[i].file;if(!f)return;const w=window.open(URL.createObjectURL(dataBlob(f.data,f.type)),"_blank");if(!w)gSave(i)}
+function gSave(i){const f=S[i]&&S[i].file;if(!f)return;const a=document.createElement("a");a.href=URL.createObjectURL(dataBlob(f.data,f.type));a.download=f.name;document.body.appendChild(a);a.click();a.remove()}
 function toggleManage(){manage=!manage;if(manage)GR.forEach(g=>{GO[g.id]=true});try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}mgBtn.textContent=manage?"✔ إنهاء التعديل والحذف":"✏️ تعديل وحذف";render()}
-function secMenu(i){asIdx=i;ash.innerHTML='<div class="ast">'+esc(S[i].title)+'</div><button onclick="secRename()">تعديل الاسم</button><button class="dng" onclick="secDelete()">حذف القسم</button><button class="g" onclick="closeAS()">إلغاء</button>';asheet.style.display="flex"}
-function closeAS(){asheet.style.display="none";asIdx=-1}
+function secMenu(i){asIdx=i;ash.innerHTML='<div class="ast">'+esc(S[i].title)+'</div><button onclick="secRename()">تعديل الاسم</button><button class="dng" onclick="secDelete()">حذف</button><button class="g" onclick="closeAS()">إلغاء</button>';asheet.style.display="flex"}
+function closeAS(){asheet.style.display="none";asIdx=-1;asFile=-1}
 function secRename(){const s=S[asIdx];if(!s)return closeAS();const v=prompt("اسم القسم:",s.title);if(v&&v.trim()){s.title=s.heading=v.trim();save()}closeAS();render()}
-function secDelete(){const s=S[asIdx];if(!s)return closeAS();if(confirm("حذف القسم «"+s.title+"» مع كل صوره وملفاته؟ لا يمكن التراجع.")){S.splice(asIdx,1);save()}closeAS();render()}
+function secDelete(){const s=S[asIdx];if(!s)return closeAS();if(confirm(s.kind==="folder"?"حذف المجلد «"+s.title+"» مع كل ملفاته؟ لا يمكن التراجع.":s.kind==="gfile"?"حذف الملف «"+s.title+"»؟ لا يمكن التراجع.":"حذف القسم «"+s.title+"» مع كل صوره وملفاته؟ لا يمكن التراجع.")){S.splice(asIdx,1);save()}closeAS();render()}
 function renameSec(){const s=S[view];if(!s)return;const v=prompt("اسم القسم:",s.title);if(v&&v.trim()){s.title=s.heading=v.trim();save()}}
 function toggleMain(e){e.stopPropagation();hmenu.classList.toggle("show")}
 function closeMain(){hmenu.classList.remove("show")}
