@@ -86,6 +86,10 @@ body:not(.home) #list>.sec{flex:1;display:flex;flex-direction:column}
 #fvb canvas,#fvb img{max-width:100%;height:auto;background:#fff;border-radius:6px}
 #fvb video{max-width:100%;max-height:100%}
 #fvb pre{white-space:pre-wrap;overflow-wrap:anywhere;align-self:stretch;font:inherit;font-size:16px;line-height:1.8;margin:0;-webkit-user-select:text;user-select:text}
+#fvb.pdf{align-items:flex-start;touch-action:pan-x pan-y}
+#pdfw{flex:none;display:flex;flex-direction:column;gap:10px}
+.pgp{width:100%;background:#fff;border-radius:4px;overflow:hidden}
+#fvb .pgp canvas{display:block;width:100%;height:100%;max-width:none;border-radius:0}
 #fvb .xl{align-self:stretch;overflow:auto}
 #fvb .xl table{border-collapse:collapse;font-size:14px;direction:ltr;background:var(--card);color:var(--tx)}
 #fvb .xl td,#fvb .xl th{border:1px solid var(--bd);padding:4px 8px;white-space:nowrap}
@@ -129,7 +133,7 @@ textarea{min-height:90px;resize:vertical}
 </div>
 <div id="list"></div>
 <div id="zm"><img id="zi"><span class="cnt" id="zcnt"></span><div id="zNav"><button class="nav r" onclick="zgo(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><button class="nav l" onclick="zgo(-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button></div></div>
-<div id="fv"><div class="fvh"><button class="g ic" onclick="fvBack()" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><span id="fvn"></span><button class="g sm" id="fvsv" onclick="fvSave()">حفظ</button></div><div id="fvb"></div></div>
+<div id="fv"><div class="fvh"><button class="g ic" onclick="fvBack()" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><span id="fvn"></span></div><div id="fvb"></div></div>
 <div id="asheet" onclick="closeAS()"><div id="ash" onclick="event.stopPropagation()"></div></div>
 <script id="emb" type="application/json"></script>
 <script>
@@ -246,7 +250,7 @@ async function addImgs(i,inp){
 function fmtSize(b){return b<1048576?Math.max(1,Math.round(b/1024))+" ك.ب":(b/1048576).toFixed(1)+" م.ب"}
 function fileCard(i,k,t){
   const f=t.file||{name:"ملف",size:0},p=f.name.split("."),ext=(p.length>1?p.pop():"FILE").slice(0,4).toUpperCase();
-  return `<div class="fc ${lastDir?(lastDir>0?"sln":"slp"):""}"><div class="fi">${esc(ext)}</div><div class="fn">${esc(f.name)}</div><div class="fs">${fmtSize(f.size||0)}</div><div class="fb"><button onclick="fileOpen(${i},${k})">فتح</button>${isPdf(f)?"":`<button class="g" onclick="fileSave(${i},${k})">حفظ</button>`}</div></div>`;
+  return `<div class="fc ${lastDir?(lastDir>0?"sln":"slp"):""}"><div class="fi">${esc(ext)}</div><div class="fn">${esc(f.name)}</div><div class="fs">${fmtSize(f.size||0)}</div><div class="fb"><button onclick="fileOpen(${i},${k})">فتح</button></div></div>`;
 }
 function dataBlob(d,t){const p=d.split(","),bin=atob(p[1]),u=new Uint8Array(bin.length);for(let x=0;x<bin.length;x++)u[x]=bin.charCodeAt(x);return new Blob([u],{type:t})}
 function fileOpen(i,k){const f=S[i].items[k].file;if(f)fvOpen(f)}
@@ -263,7 +267,7 @@ function render(){
             its=all.filter(x=>x.s.kind!=="gfile"),fls=all.filter(x=>x.s.kind==="gfile"),op=!!GO[g.id];
       const ln=i=>manage?`<button class="lines" onclick="event.stopPropagation();secMenu(${i})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>`:"";
       const rows=its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span class="rt">${x.s.kind==="folder"?"📁 ":""}${esc(x.s.title)}${x.s.kind==="folder"?` <span class="mut">(${(x.s.files||[]).length})</span>`:""}</span>${ln(x.i)}<span class="ar">‹</span></div>`).join("");
-      const frows=fls.map(x=>{const f=x.s.file||{},p=(f.name||"").split("."),ext=(p.length>1?p.pop():"FILE").slice(0,4).toUpperCase();return `<div class="srow" onclick="gOpen(${x.i})"><span class="fx">${esc(ext)}</span><span class="rt">${esc(x.s.title)} <span class="mut">${fmtSize(f.size||0)}</span></span>${isPdf(f)?"":`<button class="g sm" onclick="event.stopPropagation();gSave(${x.i})">حفظ</button>`}${ln(x.i)}</div>`}).join("");
+      const frows=fls.map(x=>{const f=x.s.file||{},p=(f.name||"").split("."),ext=(p.length>1?p.pop():"FILE").slice(0,4).toUpperCase();return `<div class="srow" onclick="gOpen(${x.i})"><span class="fx">${esc(ext)}</span><span class="rt">${esc(x.s.title)} <span class="mut">${fmtSize(f.size||0)}</span></span>${ln(x.i)}</div>`}).join("");
       const addf=g.id==="g4"?`<div class="srow" onclick="addFolder()"><span class="rt" style="color:var(--ac)">+ إضافة مجلد</span></div>`:"";
       return `<div class="sec gc ${op?"open":""}" style="--gc:${g.c}"><div class="hd" onclick="togG('${g.id}')"><b><bdi>${g.n}</bdi> <span class="mut">(${all.length})</span></b><span class="ar">‹</span></div>${op?((addf+rows+frows)||'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
   }else{
@@ -321,30 +325,86 @@ zm.addEventListener("touchend",e=>{
 zm.addEventListener("wheel",e=>{e.preventDefault();zs(e.deltaY<0?1.2:1/1.2)},{passive:false});
 /* backup */
 let asIdx=-1,manage=false,asFile=-1,fvCur=null;
+const isSheet=f=>/\.(xlsx|xls|xlsm|ods)$/i.test(f.name||"")||/spreadsheet|ms-excel/.test((f.type||"").toLowerCase());
+const noSave=(f,g)=>isPdf(f)||(g==="g3"&&isSheet(f));
 const isPdf=f=>((f.type||"").toLowerCase()==="application/pdf"||/\.pdf$/i.test(f.name||""));
 function fvOpen(f){
-  fvCur=f;fvn.textContent=f.name;fvsv.style.display=isPdf(f)?"none":"";fv.style.display="flex";fvb.innerHTML='<div class="fvm">جارٍ التحميل…</div>';
+  fvCur=f;fvn.textContent=f.name;fv.style.display="flex";fvb.innerHTML='<div class="fvm">جارٍ التحميل…</div>';
   try{history.pushState({fv:1,v:view},"")}catch(e){}
   fvRender(f);
 }
-function fvClose(){fv.style.display="none";fvb.innerHTML="";fvCur=null}
+function fvClose(){fv.style.display="none";if(pdfObs){pdfObs.disconnect();pdfObs=null}pdfDoc=null;pdfMode=false;pinch=null;fvb.classList.remove("pdf");fvb.innerHTML="";fvCur=null}
 function fvBack(){if(history.state&&history.state.fv)history.back();else fvClose()}
 function fvSave(){if(!fvCur)return;const a=document.createElement("a");a.href=URL.createObjectURL(dataBlob(fvCur.data,fvCur.type));a.download=fvCur.name;document.body.appendChild(a);a.click();a.remove()}
+let pdfDoc=null,pdfMode=false,pdfZoom=1,pdfBaseW=0,pdfObs=null,pinch=null;
+async function pdfRender(el){
+  const key=pdfZoom.toFixed(3)+"|"+pdfBaseW;
+  if(el._key===key&&el._ok)return;
+  el._key=key;el._ok=false;
+  if(el._task){try{el._task.cancel()}catch(e){}try{await el._task.promise}catch(e){}}
+  if(!pdfDoc||el._key!==key)return;
+  const page=await pdfDoc.getPage(+el.dataset.p);
+  if(!pdfDoc||el._key!==key)return;
+  const v0=page.getViewport({scale:1}),ratio=v0.height/v0.width,dpr=Math.min(window.devicePixelRatio||1,3);
+  let pw=pdfBaseW*pdfZoom*dpr;const cap=Math.sqrt(16e6/ratio);if(pw>cap)pw=cap;
+  const vp=page.getViewport({scale:pw/v0.width}),c=el.firstChild;
+  c.width=Math.floor(vp.width);c.height=Math.floor(vp.height);
+  const task=page.render({canvasContext:c.getContext("2d"),viewport:vp});el._task=task;
+  try{await task.promise;if(el._key===key)el._ok=true}catch(e){}
+}
+function pdfFree(el){
+  if(el._task){try{el._task.cancel()}catch(e){}}
+  el._key="";el._ok=false;const c=el.firstChild;if(c){c.width=1;c.height=1}
+}
 async function fvPdf(b){
   if(!window.pdfjsLib){
     await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)});
     pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   }
-  const pdf=await pdfjsLib.getDocument({data:new Uint8Array(await b.arrayBuffer())}).promise;
-  fvb.innerHTML="";
-  const w=Math.min(fvb.clientWidth-20,900),dpr=Math.min(window.devicePixelRatio||1,2.5);
-  for(let p=1;p<=pdf.numPages;p++){
-    if(!fvCur)return;
-    const pg=await pdf.getPage(p),v0=pg.getViewport({scale:1}),vp=pg.getViewport({scale:w*dpr/v0.width});
-    const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;c.style.width=w+"px";c.style.height=(vp.height/dpr)+"px";fvb.appendChild(c);
-    await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+  const doc=await pdfjsLib.getDocument({data:new Uint8Array(await b.arrayBuffer())}).promise;
+  if(!fvCur)return;
+  pdfDoc=doc;pdfMode=true;pdfZoom=1;
+  fvb.innerHTML="";fvb.classList.add("pdf");
+  pdfBaseW=Math.min(fvb.clientWidth-20,900);
+  const wrap=document.createElement("div");wrap.id="pdfw";wrap.style.width=pdfBaseW+"px";fvb.appendChild(wrap);
+  pdfObs=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting)pdfRender(en.target);else pdfFree(en.target)})},{root:fvb,rootMargin:"150% 0px"});
+  for(let p=1;p<=doc.numPages;p++){
+    const pg=await doc.getPage(p);if(!fvCur||pdfDoc!==doc)return;
+    const v=pg.getViewport({scale:1}),el=document.createElement("div");
+    el.className="pgp";el.dataset.p=p;el.style.aspectRatio=v.width+"/"+v.height;
+    el.appendChild(document.createElement("canvas"));wrap.appendChild(el);pdfObs.observe(el);
   }
 }
+const d2=e=>Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+fvb.addEventListener("touchstart",e=>{
+  if(!pdfMode||e.touches.length!==2)return;
+  const w=document.getElementById("pdfw");if(!w)return;
+  const r=w.getBoundingClientRect(),fr=fvb.getBoundingClientRect();
+  const cx=(e.touches[0].clientX+e.touches[1].clientX)/2,cy=(e.touches[0].clientY+e.touches[1].clientY)/2;
+  pinch={d:d2(e),z:pdfZoom,nz:pdfZoom,cx,cy,ox:cx-r.left,oy:cy-r.top,fl:fr.left,ft:fr.top,wx:r.left-fr.left+fvb.scrollLeft,wy:r.top-fr.top+fvb.scrollTop};
+  w.style.transformOrigin=pinch.ox+"px "+pinch.oy+"px";
+},{passive:true});
+fvb.addEventListener("touchmove",e=>{
+  if(!pinch||e.touches.length!==2)return;
+  e.preventDefault();
+  pinch.nz=Math.min(5,Math.max(1,pinch.z*d2(e)/pinch.d));
+  document.getElementById("pdfw").style.transform="scale("+(pinch.nz/pinch.z)+")";
+},{passive:false});
+function pinchEnd(e){
+  if(!pinch||e.touches.length>=2)return;
+  const p=pinch,w=document.getElementById("pdfw");pinch=null;
+  if(!w)return;
+  w.style.transform="";
+  if(Math.abs(p.nz-pdfZoom)<0.02)return;
+  const ratio=p.nz/pdfZoom;pdfZoom=p.nz;
+  w.style.width=(pdfBaseW*pdfZoom)+"px";
+  fvb.scrollLeft=p.wx+p.ox*ratio-(p.cx-p.fl);
+  fvb.scrollTop=p.wy+p.oy*ratio-(p.cy-p.ft);
+  pdfObs.disconnect();
+  [...w.children].forEach(el=>{el._key="";el._ok=false;pdfObs.observe(el)});
+}
+fvb.addEventListener("touchend",pinchEnd);
+fvb.addEventListener("touchcancel",pinchEnd);
 async function fvSheet(b){
   if(!window.XLSX){await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
   const wb=XLSX.read(await b.arrayBuffer(),{type:"array"});
@@ -363,7 +423,7 @@ async function fvRender(f){
     if(t.startsWith("video/")){fvb.innerHTML='<video controls playsinline src="'+u+'"></video>';return}
     if(t.startsWith("audio/")){fvb.innerHTML='<audio controls src="'+u+'" style="width:100%"></audio>';return}
     if(/\.(xlsx|xls|xlsm|ods)$/.test(n)||t.includes("spreadsheet")||t.includes("ms-excel")){
-      try{await fvSheet(b)}catch(e){fvb.innerHTML='<div class="fvm">تعذّر عرض ملف Excel الآن (يحتاج اتصالاً بالإنترنت في أول مرة).<br>يمكنك الضغط على «حفظ» وفتحه بتطبيق آخر.</div>'}
+      try{await fvSheet(b)}catch(e){fvb.innerHTML='<div class="fvm">تعذّر عرض ملف Excel الآن (يحتاج اتصالاً بالإنترنت في أول مرة).</div>'}
       return;
     }
     if(t.startsWith("text/")||/\.(txt|md|csv|json|log)$/.test(n)){const tx=await b.text();fvb.innerHTML="";const p=document.createElement("pre");p.textContent=tx;fvb.appendChild(p);return}
@@ -372,7 +432,7 @@ async function fvRender(f){
       return;
     }
   }catch(e){}
-  fvb.innerHTML='<div class="fvm">لا يمكن عرض هذا النوع من الملفات داخل التطبيق.<br>اضغط «حفظ» لتنزيله وفتحه بتطبيق آخر.</div>';
+  fvb.innerHTML='<div class="fvm">لا يمكن عرض هذا النوع من الملفات داخل التطبيق.</div>';
 }
 function addFolder(){const v=prompt("اسم المجلد:");if(!v||!v.trim())return;S.unshift({id:Date.now()*1000+Math.floor(Math.random()*1000),kind:"folder",title:v.trim(),heading:v.trim(),items:[],idx:0,group:"g4",files:[]});GO.g4=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}save();render()}
 async function addFolderFiles(i,inp){
@@ -393,7 +453,7 @@ function renderFolder(s,i){
   const fs=s.files||[];
   list.innerHTML=`<div class="sec"><div class="body pgb" style="padding-top:4px">
    <div class="srow" style="position:relative;border-top:0"><span class="rt" style="color:var(--ac)">+ إضافة ملفات</span><input type="file" multiple style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0" onchange="addFolderFiles(${i},this)"></div>
-   ${fs.length?fs.map((f,j)=>`<div class="srow" onclick="fOpen(${i},${j})"><span class="fx">${esc(fExt(f.name))}</span><span class="rt">${esc(f.name)} <span class="mut">${fmtSize(f.size||0)}</span></span>${isPdf(f)?"":`<button class="g sm" onclick="event.stopPropagation();fSave(${i},${j})">حفظ</button>`}<button class="lines" onclick="event.stopPropagation();fMenu(${i},${j})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>`).join(""):'<div class="empty" style="padding:24px 14px">المجلد فارغ. أضف ملفات.</div>'}
+   ${fs.length?fs.map((f,j)=>`<div class="srow" onclick="fOpen(${i},${j})"><span class="fx">${esc(fExt(f.name))}</span><span class="rt">${esc(f.name)} <span class="mut">${fmtSize(f.size||0)}</span></span><button class="lines" onclick="event.stopPropagation();fMenu(${i},${j})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>`).join(""):'<div class="empty" style="padding:24px 14px">المجلد فارغ. أضف ملفات.</div>'}
   </div></div>`;
 }
 function fOpen(i,j){const f=S[i].files[j];if(f)fvOpen(f)}
