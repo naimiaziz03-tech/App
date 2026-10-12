@@ -134,7 +134,7 @@ textarea{min-height:90px;resize:vertical}
 <script id="emb" type="application/json"></script>
 <script>
 const SRC="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
-let S=[],db=null;
+let S=[],db=null,busy=0;
 const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open("sections-app",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 async function load(){
   let old=[];try{old=JSON.parse(localStorage.getItem("secs")||"[]")}catch(e){}
@@ -189,7 +189,7 @@ const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"
 function addSec(){const v=nt.value.trim();if(!v)return;S.unshift(Object.assign({id:Date.now(),title:v,heading:v,items:[],open:true,idx:0,group:ng.value},ng.value==="g4"?{kind:"folder",files:[]}:{}));GO[ng.value]=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}nt.value="";save();render()}
 let view=null,hist=[];
 async function reloadData(){
-  if(!db)return;
+  if(!db||busy>0)return;
   try{const v=await new Promise(res=>{const q=db.transaction("kv").objectStore("kv").get("secs");q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)});if(Array.isArray(v))S=v}catch(e){}
 }
 async function openSec(i){const id=S[i]&&S[i].id;await reloadData();const j=S.findIndex(s=>s.id===id);if(j<0){return home()}hist.push(view);view=j;try{history.pushState({v:j},"")}catch(e){}render();scrollTo(0,0)}
@@ -228,17 +228,20 @@ function fit(t){t.style.height="auto";t.style.height=t.scrollHeight+"px"}
 addEventListener("resize",()=>document.querySelectorAll("textarea.art").forEach(fit));
 function readData(f){return new Promise((r,j)=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.onerror=j;fr.readAsDataURL(f)})}
 async function addImgs(i,inp){
-  const fs=[...inp.files];
-  for(const f of fs){
-    if(f.size>40*1048576){alert("الملف «"+f.name+"» أكبر من 40 ميغابايت وتم تجاوزه");continue}
-    try{
-      if(f.type.startsWith("image/")){
-        try{const d=f.type==="image/gif"?await readData(f):await shrink(f);S[i].items.push({img:d,text:""});continue}catch(e){}
-      }
-      S[i].items.push({file:{name:f.name,type:f.type||"application/octet-stream",size:f.size,data:await readData(f)},text:""});
-    }catch(e){}
-  }
-  S[i].idx=S[i].items.length-1;inp.value="";save();render();
+  const fs=[...inp.files],id=S[i]&&S[i].id;busy++;
+  try{
+    for(const f of fs){
+      if(f.size>40*1048576){alert("الملف «"+f.name+"» أكبر من 40 ميغابايت وتم تجاوزه");continue}
+      let item=null;
+      try{
+        if(f.type.startsWith("image/")){try{const d=f.type==="image/gif"?await readData(f):await shrink(f);item={img:d,text:""}}catch(e){}}
+        if(!item)item={file:{name:f.name,type:f.type||"application/octet-stream",size:f.size,data:await readData(f)},text:""};
+      }catch(e){item=null}
+      const s=S.find(x=>x.id===id);
+      if(s&&item){s.items.push(item);s.idx=s.items.length-1}
+    }
+  }finally{busy--}
+  inp.value="";save();render();
 }
 function fmtSize(b){return b<1048576?Math.max(1,Math.round(b/1024))+" ك.ب":(b/1048576).toFixed(1)+" م.ب"}
 function fileCard(i,k,t){
@@ -373,11 +376,16 @@ async function fvRender(f){
 }
 function addFolder(){const v=prompt("اسم المجلد:");if(!v||!v.trim())return;S.unshift({id:Date.now()*1000+Math.floor(Math.random()*1000),kind:"folder",title:v.trim(),heading:v.trim(),items:[],idx:0,group:"g4",files:[]});GO.g4=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}save();render()}
 async function addFolderFiles(i,inp){
-  const s0=S[i];if(!s0)return;const id=s0.id,fl=[...inp.files];
-  for(const f of fl){
-    if(f.size>40*1048576){alert("الملف «"+f.name+"» أكبر من 40 ميغابايت وتم تجاوزه");continue}
-    try{const d=await readData(f),s=S.find(x=>x.id===id);if(s)(s.files=s.files||[]).push({name:f.name,type:f.type||"application/octet-stream",size:f.size,data:d})}catch(e){}
-  }
+  const s0=S[i];if(!s0)return;const id=s0.id,fl=[...inp.files];busy++;
+  try{
+    for(const f of fl){
+      if(f.size>40*1048576){alert("الملف «"+f.name+"» أكبر من 40 ميغابايت وتم تجاوزه");continue}
+      try{
+        const d=await readData(f),s=S.find(x=>x.id===id);
+        if(s){s.files=s.files||[];s.files.push({name:f.name,type:f.type||"application/octet-stream",size:f.size,data:d})}
+      }catch(e){}
+    }
+  }finally{busy--}
   inp.value="";save();render();
 }
 function fExt(n){const p=(n||"").split(".");return (p.length>1?p.pop():"FILE").slice(0,4).toUpperCase()}
@@ -399,10 +407,16 @@ function migrate(){
   S.unshift({id:Date.now()*1000+7,kind:"folder",title:"ملفات",heading:"ملفات",items:[],idx:0,group:"g4",files:g.map(s=>s.file).filter(Boolean)});
 }
 async function addGFiles(inp){
-  for(const f of [...inp.files]){
-    if(f.size>40*1048576){alert("الملف «"+f.name+"» أكبر من 40 ميغابايت وتم تجاوزه");continue}
-    try{S.unshift({id:Date.now()*1000+Math.floor(Math.random()*1000),kind:"gfile",title:f.name,heading:f.name,items:[],idx:0,group:"g4",file:{name:f.name,type:f.type||"application/octet-stream",size:f.size,data:await readData(f)}})}catch(e){}
-  }
+  const fl=[...inp.files];busy++;
+  try{
+    for(const f of fl){
+      if(f.size>40*1048576){alert("الملف «"+f.name+"» أكبر من 40 ميغابايت وتم تجاوزه");continue}
+      try{
+        const d=await readData(f);
+        S.unshift({id:Date.now()*1000+Math.floor(Math.random()*1000),kind:"gfile",title:f.name,heading:f.name,items:[],idx:0,group:"g4",file:{name:f.name,type:f.type||"application/octet-stream",size:f.size,data:d}});
+      }catch(e){}
+    }
+  }finally{busy--}
   inp.value="";GO.g4=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}save();render();
 }
 function gOpen(i){const f=S[i]&&S[i].file;if(f)fvOpen(f)}
