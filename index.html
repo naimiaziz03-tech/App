@@ -71,7 +71,22 @@ body:not(.home) #list{flex:1;display:flex;flex-direction:column}
 body:not(.home) #list>.sec{flex:1;display:flex;flex-direction:column}
 .mgb{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px dashed var(--ac);color:var(--ac);border-radius:12px;padding:8px 12px;margin-bottom:10px;font-size:14px}
 .fx{background:var(--ac);color:#fff;border-radius:8px;padding:2px 7px;font-size:12px;font-weight:700;margin-inline-end:8px}
-.srow .rt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .rt{flex:1;min-width:0;overflow-wrap:anywhere}
+.sec.gc{border-color:var(--gc)}
+.sec.gc .hd{background:var(--gc);color:#fff;justify-content:center;position:relative;text-align:center;padding:16px 44px}
+.sec.gc .hd b{flex:none}
+.sec.gc .hd .mut{color:rgba(255,255,255,.85)}
+.sec.gc .hd .ar{position:absolute;left:16px;top:0;bottom:0;display:flex;align-items:center;color:#fff}
+.sec.gc .srow{border-top-color:var(--gc)}
+.sec.gc .fx{background:var(--gc)}
+#fv{position:fixed;inset:0;background:var(--bg);z-index:97;display:none;flex-direction:column}
+.fvh{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px;border-bottom:1px solid var(--bd);background:var(--card)}
+#fvn{flex:1;font-weight:600;overflow-wrap:anywhere;font-size:15px}
+#fvb{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:10px;display:flex;flex-direction:column;align-items:center;gap:10px}
+#fvb canvas,#fvb img{max-width:100%;height:auto;background:#fff;border-radius:6px}
+#fvb video{max-width:100%;max-height:100%}
+#fvb pre{white-space:pre-wrap;overflow-wrap:anywhere;align-self:stretch;font:inherit;font-size:16px;line-height:1.8;margin:0;-webkit-user-select:text;user-select:text}
+#fvb .fvm{color:var(--mut);text-align:center;padding:30px 10px;line-height:1.9}
 .lines{width:38px;height:38px;border-radius:50%;padding:0;display:grid;place-items:center;background:transparent;color:var(--mut);border:0;margin-inline:6px}
 .lines svg{width:22px;height:22px}
 #asheet{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:98;display:none;align-items:flex-end}
@@ -105,10 +120,11 @@ textarea{min-height:90px;resize:vertical}
 </head>
 <body>
 <div id="top"><button class="g ic" id="bk" onclick="back()" style="visibility:hidden" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><h1 id="ttl">أقسامي</h1><button class="g ic" id="hm" onclick="home()" style="visibility:hidden" aria-label="الرئيسية"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></button><button class="g ic" id="mb" onclick="toggleMain(event)" aria-label="القائمة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div id="hmenu" onclick="event.stopPropagation()"><button onclick="exportAll();closeMain()">📦 ملف كامل</button><button id="mgBtn" onclick="toggleManage();closeMain()">✏️ تعديل وحذف</button><button onclick="backup();closeMain()">⬇ نسخة احتياطية</button><label class="mi">⬆ استعادة<input type="file" accept=".html,.htm,.json,text/html,application/json" onchange="restore(this)"></label></div></div>
-<div id="homebar"><div class="add"><input id="nt" spellcheck="true" autocorrect="on" autocomplete="on" lang="ar" placeholder="عنوان قسم جديد..."><select id="ng"><option value="g1">Tests</option><option value="g2">Appareillages</option><option value="g3">Schemas</option><option value="g4">Preparation&amp;Compte rendu</option></select><button onclick="addSec()">إضافة</button></div>
+<div id="homebar"><div class="add"><input id="nt" spellcheck="true" autocorrect="on" autocomplete="on" lang="ar" placeholder="عنوان قسم جديد..."><select id="ng"><option value="g1">Tests</option><option value="g2">Appareillages</option><option value="g3">Schemas</option></select><button onclick="addSec()">إضافة</button></div>
 </div>
 <div id="list"></div>
 <div id="zm"><img id="zi"><span class="cnt" id="zcnt"></span><div id="zNav"><button class="nav r" onclick="zgo(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><button class="nav l" onclick="zgo(-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button></div></div>
+<div id="fv"><div class="fvh"><button class="g ic" onclick="fvBack()" aria-label="رجوع"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button><span id="fvn"></span><button class="g sm" id="fvsv" onclick="fvSave()">حفظ</button></div><div id="fvb"></div></div>
 <div id="asheet" onclick="closeAS()"><div id="ash" onclick="event.stopPropagation()"></div></div>
 <script id="emb" type="application/json"></script>
 <script>
@@ -160,7 +176,7 @@ function save(){
   try{localStorage.setItem("secs",JSON.stringify(S))}catch(e){if(!window._w){window._w=1;alert("تعذّر الحفظ على هذا الجهاز. إن كنت تفتح ملفاً مباشرة فاستورده داخل التطبيق المثبّت من زر «استعادة».")}}
 }
 const ICON='<span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>';
-const GR=[{id:"g1",n:"Tests"},{id:"g2",n:"Appareillages"},{id:"g3",n:"Schemas"},{id:"g4",n:"Preparation&Compte rendu"}];
+const GR=[{id:"g1",n:"Tests",c:"#2563eb"},{id:"g2",n:"Appareillages",c:"#d97706"},{id:"g3",n:"Schemas",c:"#059669"},{id:"g4",n:"Preparation&Compte rendu",c:"#9333ea"}];
 let GO={};try{GO=JSON.parse(localStorage.getItem("go")||"{}")}catch(e){}
 function togG(id){GO[id]=!GO[id];try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}render()}
 function setG(i,g){S[i].group=g;GO[g]=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}save();render()}
@@ -174,7 +190,7 @@ async function reloadData(){
 async function openSec(i){const id=S[i]&&S[i].id;await reloadData();const j=S.findIndex(s=>s.id===id);if(j<0){return home()}hist.push(view);view=j;try{history.pushState({v:j},"")}catch(e){}render();scrollTo(0,0)}
 async function back(){await reloadData();view=hist.length?hist.pop():null;render();scrollTo(0,0)}
 async function home(){await reloadData();hist=[];view=null;render();scrollTo(0,0)}
-addEventListener("popstate",()=>{if(zm.style.display=="flex"){zclose();return}if(view!==null)back()});
+addEventListener("popstate",()=>{if(fv.style.display=="flex"){fvClose();return}if(zm.style.display=="flex"){zclose();return}if(view!==null)back()});
 document.addEventListener("visibilitychange",async()=>{if(document.visibilityState=="visible"){await reloadData();render()}});
 function delSec(i){if(confirm("حذف هذا القسم؟")){S.splice(i,1);save();home()}}
 function setT(i,v){S[i].heading=v;S[i].title=v||S[i].title;save();0}
@@ -225,7 +241,7 @@ function fileCard(i,k,t){
   return `<div class="fc ${lastDir?(lastDir>0?"sln":"slp"):""}"><div class="fi">${esc(ext)}</div><div class="fn">${esc(f.name)}</div><div class="fs">${fmtSize(f.size||0)}</div><div class="fb"><button onclick="fileOpen(${i},${k})">فتح</button><button class="g" onclick="fileSave(${i},${k})">حفظ</button></div></div>`;
 }
 function dataBlob(d,t){const p=d.split(","),bin=atob(p[1]),u=new Uint8Array(bin.length);for(let x=0;x<bin.length;x++)u[x]=bin.charCodeAt(x);return new Blob([u],{type:t})}
-function fileOpen(i,k){const f=S[i].items[k].file,u=URL.createObjectURL(dataBlob(f.data,f.type));const w=window.open(u,"_blank");if(!w)fileSave(i,k)}
+function fileOpen(i,k){const f=S[i].items[k].file;if(f)fvOpen(f)}
 function fileSave(i,k){const f=S[i].items[k].file,a=document.createElement("a");a.href=URL.createObjectURL(dataBlob(f.data,f.type));a.download=f.name;document.body.appendChild(a);a.click();a.remove()}
 function shrink(f){return new Promise((r,j)=>{const im=new Image();im.onload=()=>{const m=1600,k=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);r(c.toDataURL("image/jpeg",.8))};im.onerror=j;im.src=URL.createObjectURL(f)})}
 function render(){
@@ -241,7 +257,7 @@ function render(){
       const rows=its.map(x=>`<div class="srow" onclick="openSec(${x.i})"><span class="rt">${x.s.kind==="folder"?"📁 ":""}${esc(x.s.title)}${x.s.kind==="folder"?` <span class="mut">(${(x.s.files||[]).length})</span>`:""}</span>${ln(x.i)}<span class="ar">‹</span></div>`).join("");
       const frows=fls.map(x=>{const f=x.s.file||{},p=(f.name||"").split("."),ext=(p.length>1?p.pop():"FILE").slice(0,4).toUpperCase();return `<div class="srow" onclick="gOpen(${x.i})"><span class="fx">${esc(ext)}</span><span class="rt">${esc(x.s.title)} <span class="mut">${fmtSize(f.size||0)}</span></span><button class="g sm" onclick="event.stopPropagation();gSave(${x.i})">حفظ</button>${ln(x.i)}</div>`}).join("");
       const addf=g.id==="g4"?`<div class="srow" onclick="addFolder()"><span class="rt" style="color:var(--ac)">+ إضافة مجلد</span></div>`:"";
-      return `<div class="sec ${op?"open":""}"><div class="hd" onclick="togG('${g.id}')"><b><bdi>${g.n}</bdi> <span class="mut">(${all.length})</span></b><span class="ar">‹</span></div>${op?((addf+rows+frows)||'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
+      return `<div class="sec gc ${op?"open":""}" style="--gc:${g.c}"><div class="hd" onclick="togG('${g.id}')"><b><bdi>${g.n}</bdi> <span class="mut">(${all.length})</span></b><span class="ar">‹</span></div>${op?((addf+rows+frows)||'<div class="empty" style="padding:14px">لا توجد أقسام</div>'):""}</div>`}).join("");
   }else{
     const s=S[view];if(!s){home();return}
     ttl.innerHTML='<span class="ttx">'+esc(s.title)+'</span>';ttl.onclick=null;ttl.removeAttribute("aria-label");
@@ -296,13 +312,50 @@ zm.addEventListener("touchend",e=>{
 },{passive:true});
 zm.addEventListener("wheel",e=>{e.preventDefault();zs(e.deltaY<0?1.2:1/1.2)},{passive:false});
 /* backup */
-let asIdx=-1,manage=false,asFile=-1;
+let asIdx=-1,manage=false,asFile=-1,fvCur=null;
+function fvOpen(f){
+  fvCur=f;fvn.textContent=f.name;fvsv.style.display=((f.type||"").toLowerCase()==="application/pdf"||/\.pdf$/i.test(f.name||""))?"none":"";fv.style.display="flex";fvb.innerHTML='<div class="fvm">جارٍ التحميل…</div>';
+  try{history.pushState({fv:1,v:view},"")}catch(e){}
+  fvRender(f);
+}
+function fvClose(){fv.style.display="none";fvb.innerHTML="";fvCur=null}
+function fvBack(){if(history.state&&history.state.fv)history.back();else fvClose()}
+function fvSave(){if(!fvCur)return;const a=document.createElement("a");a.href=URL.createObjectURL(dataBlob(fvCur.data,fvCur.type));a.download=fvCur.name;document.body.appendChild(a);a.click();a.remove()}
+async function fvPdf(b){
+  if(!window.pdfjsLib){
+    await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)});
+    pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+  const pdf=await pdfjsLib.getDocument({data:new Uint8Array(await b.arrayBuffer())}).promise;
+  fvb.innerHTML="";
+  const w=Math.min(fvb.clientWidth-20,900),dpr=Math.min(window.devicePixelRatio||1,2.5);
+  for(let p=1;p<=pdf.numPages;p++){
+    if(!fvCur)return;
+    const pg=await pdf.getPage(p),v0=pg.getViewport({scale:1}),vp=pg.getViewport({scale:w*dpr/v0.width});
+    const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;c.style.width=w+"px";c.style.height=(vp.height/dpr)+"px";fvb.appendChild(c);
+    await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+  }
+}
+async function fvRender(f){
+  const t=(f.type||"").toLowerCase(),n=(f.name||"").toLowerCase(),b=dataBlob(f.data,f.type),u=URL.createObjectURL(b);
+  try{
+    if(t.startsWith("image/")){fvb.innerHTML="";const im=new Image();im.src=u;fvb.appendChild(im);return}
+    if(t.startsWith("video/")){fvb.innerHTML='<video controls playsinline src="'+u+'"></video>';return}
+    if(t.startsWith("audio/")){fvb.innerHTML='<audio controls src="'+u+'" style="width:100%"></audio>';return}
+    if(t.startsWith("text/")||/\.(txt|md|csv|json|log)$/.test(n)){const tx=await b.text();fvb.innerHTML="";const p=document.createElement("pre");p.textContent=tx;fvb.appendChild(p);return}
+    if(t==="application/pdf"||n.endsWith(".pdf")){
+      try{await fvPdf(b)}catch(e){fvb.innerHTML='<div class="fvm">تعذّر عرض الـPDF الآن (يحتاج اتصالاً بالإنترنت في أول مرة).</div>'}
+      return;
+    }
+  }catch(e){}
+  fvb.innerHTML='<div class="fvm">لا يمكن عرض هذا النوع من الملفات داخل التطبيق.<br>اضغط «حفظ» لتنزيله وفتحه بتطبيق آخر.</div>';
+}
 function addFolder(){const v=prompt("اسم المجلد:");if(!v||!v.trim())return;S.unshift({id:Date.now()*1000+Math.floor(Math.random()*1000),kind:"folder",title:v.trim(),heading:v.trim(),items:[],idx:0,group:"g4",files:[]});GO.g4=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}save();render()}
 async function addFolderFiles(i,inp){
-  const s=S[i];if(!s)return;s.files=s.files||[];
-  for(const f of [...inp.files]){
+  const s0=S[i];if(!s0)return;const id=s0.id,fl=[...inp.files];
+  for(const f of fl){
     if(f.size>40*1048576){alert("الملف «"+f.name+"» أكبر من 40 ميغابايت وتم تجاوزه");continue}
-    try{s.files.push({name:f.name,type:f.type||"application/octet-stream",size:f.size,data:await readData(f)})}catch(e){}
+    try{const d=await readData(f),s=S.find(x=>x.id===id);if(s)(s.files=s.files||[]).push({name:f.name,type:f.type||"application/octet-stream",size:f.size,data:d})}catch(e){}
   }
   inp.value="";save();render();
 }
@@ -314,7 +367,7 @@ function renderFolder(s,i){
    ${fs.length?fs.map((f,j)=>`<div class="srow" onclick="fOpen(${i},${j})"><span class="fx">${esc(fExt(f.name))}</span><span class="rt">${esc(f.name)} <span class="mut">${fmtSize(f.size||0)}</span></span><button class="g sm" onclick="event.stopPropagation();fSave(${i},${j})">حفظ</button><button class="lines" onclick="event.stopPropagation();fMenu(${i},${j})" aria-label="خيارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>`).join(""):'<div class="empty" style="padding:24px 14px">المجلد فارغ. أضف ملفات.</div>'}
   </div></div>`;
 }
-function fOpen(i,j){const f=S[i].files[j];if(!f)return;const w=window.open(URL.createObjectURL(dataBlob(f.data,f.type)),"_blank");if(!w)fSave(i,j)}
+function fOpen(i,j){const f=S[i].files[j];if(f)fvOpen(f)}
 function fSave(i,j){const f=S[i].files[j];if(!f)return;const a=document.createElement("a");a.href=URL.createObjectURL(dataBlob(f.data,f.type));a.download=f.name;document.body.appendChild(a);a.click();a.remove()}
 function fMenu(i,j){asIdx=i;asFile=j;ash.innerHTML='<div class="ast">'+esc(S[i].files[j].name)+'</div><button onclick="fRename()">تعديل الاسم</button><button class="dng" onclick="fDelete()">حذف</button><button class="g" onclick="closeAS()">إلغاء</button>';asheet.style.display="flex"}
 function fRename(){const f=(S[asIdx]||{}).files&&S[asIdx].files[asFile];if(!f)return closeAS();const v=prompt("اسم الملف:",f.name);if(v&&v.trim()){f.name=v.trim();save()}closeAS();render()}
@@ -331,7 +384,7 @@ async function addGFiles(inp){
   }
   inp.value="";GO.g4=true;try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}save();render();
 }
-function gOpen(i){const f=S[i]&&S[i].file;if(!f)return;const w=window.open(URL.createObjectURL(dataBlob(f.data,f.type)),"_blank");if(!w)gSave(i)}
+function gOpen(i){const f=S[i]&&S[i].file;if(f)fvOpen(f)}
 function gSave(i){const f=S[i]&&S[i].file;if(!f)return;const a=document.createElement("a");a.href=URL.createObjectURL(dataBlob(f.data,f.type));a.download=f.name;document.body.appendChild(a);a.click();a.remove()}
 function toggleManage(){manage=!manage;if(manage)GR.forEach(g=>{GO[g.id]=true});try{localStorage.setItem("go",JSON.stringify(GO))}catch(e){}mgBtn.textContent=manage?"✔ إنهاء التعديل والحذف":"✏️ تعديل وحذف";render()}
 function secMenu(i){asIdx=i;ash.innerHTML='<div class="ast">'+esc(S[i].title)+'</div><button onclick="secRename()">تعديل الاسم</button><button class="dng" onclick="secDelete()">حذف</button><button class="g" onclick="closeAS()">إلغاء</button>';asheet.style.display="flex"}
