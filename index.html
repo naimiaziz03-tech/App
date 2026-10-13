@@ -128,7 +128,7 @@ textarea{min-height:90px;resize:vertical}
 .row{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
 .empty{color:var(--mut);text-align:center;padding:30px 0}
 #zm{position:fixed;inset:0;background:#000;z-index:99;display:none;align-items:center;justify-content:center;touch-action:none;overflow:hidden}
-#zi{max-width:100%;max-height:100%;transform-origin:center;user-select:none;-webkit-user-drag:none}
+#zi{width:100%;height:100%;object-fit:contain;transform-origin:center;user-select:none;-webkit-user-drag:none}
 .zb{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;gap:8px;left:12px}
 .zb button{background:rgba(255,255,255,.2);width:44px;height:44px;padding:0;font-size:22px}
 </style>
@@ -302,11 +302,14 @@ function render(){
 let sc=1,tx=0,ty=0,t0=null,d0=0,s0=1,lt=0,zI=0,zK=0,zsx=0,zsy=0,zmulti=false;
 const ap=()=>{zi.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`};
 function zshow(){const n=S[zI].items.length;zi.src=S[zI].items[zK].img;sc=1;tx=ty=0;ap();zcnt.textContent=(zK+1)+" / "+n;zNav.style.display=n>1?"":"none"}
+function enterFS(el){try{const p=el.requestFullscreen?el.requestFullscreen():null;if(p&&p.then)p.then(lockLand,lockLand);else lockLand()}catch(e){lockLand()}}
+function exitFS(){try{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}catch(e){}}
+document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&zm.style.display=="flex"){if(history.state&&history.state.z)history.back();else zclose()}});
 function lockLand(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock("landscape").catch(()=>{})}catch(e){}}
 function unlockOri(){try{if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock()}catch(e){}}
-function zoom(i,k){zI=i;zK=k;zshow();zm.style.display="flex";lockLand();try{history.pushState({z:1},"")}catch(e){}}
+function zoom(i,k){zI=i;zK=k;zshow();zm.style.display="flex";enterFS(zm);try{history.pushState({z:1},"")}catch(e){}}
 function zgo(d){const a=S[zI].items,n=a.length;let x=zK;for(let c=0;c<n;c++){x=(x+d+n)%n;if(a[x].img)break}if(!a[x].img||x===zK)return;zK=x;S[zI].idx=zK;save();zshow()}
-function zclose(){if(zm.style.display=="none")return;zm.style.display="none";unlockOri();render()}
+function zclose(){if(zm.style.display=="none")return;zm.style.display="none";exitFS();unlockOri();render()}
 function zs(f){sc=Math.min(6,Math.max(1,sc*f));if(sc==1)tx=ty=0;ap()}
 const dist=e=>Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
 zm.addEventListener("touchstart",e=>{
